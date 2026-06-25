@@ -33,22 +33,26 @@ function RedirectToPrimeiroRestaurante() {
     let ignorar = false;
 
     async function buscarRestaurante() {
-      const { data, error } = await supabase
-        .from('restaurantes')
-        .select('slug')
-        .eq('status', 'ativo')
-        .order('created_at')
-        .limit(1)
-        .single();
+      try {
+        const { data, error } = await supabase
+          .from('restaurantes')
+          .select('slug')
+          .eq('status', 'ativo')
+          .order('created_at')
+          .limit(1)
+          .single();
 
-      if (ignorar) return;
+        if (ignorar) return;
 
-      if (error || !data) {
-        setErro('Nenhum restaurante encontrado.');
-        return;
+        if (error || !data) {
+          setErro(error?.message || 'Nenhum restaurante encontrado.');
+          return;
+        }
+
+        navigate(`/${data.slug}/cardapio`, { replace: true });
+      } catch (err) {
+        if (!ignorar) setErro(err.message || 'Erro inesperado ao buscar restaurante.');
       }
-
-      navigate(`/${data.slug}/cardapio`, { replace: true });
     }
 
     buscarRestaurante();
@@ -60,8 +64,9 @@ function RedirectToPrimeiroRestaurante() {
 
   if (erro) {
     return (
-      <div className="min-h-[100svh] flex items-center justify-center bg-dark text-red-400 px-6 text-center">
-        {erro}
+      <div className="min-h-[100svh] flex flex-col items-center justify-center bg-dark text-red-400 px-6 text-center gap-4">
+        <p>{erro}</p>
+        <p className="text-sm text-gray-400">Verifique se as variáveis de ambiente do Supabase estão configuradas na Vercel.</p>
       </div>
     );
   }
