@@ -1,0 +1,81 @@
+export const ESTABELECIMENTO = {
+  nome: 'Burguer do Chef',
+  telefone: '5511999999999',
+  logo: 'https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=200&q=80',
+  endereco: 'Rua das Delícias, 123 - Centro',
+  corPrimaria: '#dc2626',
+  corEscura: '#111111',
+};
+
+export const CATEGORIAS = [
+  { id: 'lanches', nome: 'Lanches' },
+  { id: 'bebidas', nome: 'Bebidas' },
+  { id: 'porcoes', nome: 'Porções' },
+  { id: 'sobremesas', nome: 'Sobremesas' },
+];
+
+export const PRODUTOS_INICIAIS = [
+  {
+    id: 1,
+    nome: 'X-Burguer',
+    descricao: 'Hambúrguer artesanal, queijo, alface, tomate e molho especial.',
+    preco: 25.0,
+    imagem: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=400&q=80',
+    categoria: 'lanches',
+    ativo: true,
+  },
+  {
+    id: 2,
+    nome: 'X-Bacon',
+    descricao: 'Hambúrguer artesanal, queijo, bacon crocante, cebola caramelizada.',
+    preco: 29.9,
+    imagem: 'https://images.unsplash.com/photo-1594212699903-ec8a3eca50f5?auto=format&fit=crop&w=400&q=80',
+    categoria: 'lanches',
+    ativo: true,
+  },
+  {
+    id: 3,
+    nome: 'Refrigerante',
+    descricao: 'Coca-Cola, Guaraná ou Fanta 350ml.',
+    preco: 8.0,
+    imagem: 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=400&q=80',
+    categoria: 'bebidas',
+    ativo: true,
+  },
+  {
+    id: 4,
+    nome: 'Suco Natural',
+    descricao: 'Suco de laranja, limão ou maracujá 400ml.',
+    preco: 10.0,
+    imagem: 'https://images.unsplash.com/photo-1600271886742-f049cd451bba?auto=format&fit=crop&w=400&q=80',
+    categoria: 'bebidas',
+    ativo: true,
+  },
+  {
+    id: 5,
+    nome: 'Batata Frita',
+    descricao: 'Porção de batatas fritas crocantes com sal.',
+    preco: 18.0,
+    imagem: 'https://images.unsplash.com/photo-1630384060421-cb20d0e0649d?auto=format&fit=crop&w=400&q=80',
+    categoria: 'porcoes',
+    ativo: true,
+  },
+  {
+    id: 6,
+    nome: 'Frango à Passarinho',
+    descricao: '300g de frango frito com limão e alho.',
+    preco: 32.0,
+    imagem: 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?auto=format&fit=crop&w=400&q=80',
+    categoria: 'porcoes',
+    ativo: true,
+  },
+  {
+    id: 7,
+    nome: 'Brownie',
+    descricao: 'Brownie de chocolate com nozes e sorvete.',
+    preco: 15.0,
+    imagem: 'https://images.unsplash.com/photo-1606313564200-e75d5e30476c?auto=format&fit=crop&w=400&q=80',
+    categoria: 'sobremesas',
+    ativo: true,
+  },
+];
