@@ -1,10 +1,28 @@
 import { useNavigate } from 'react-router-dom';
-import { useApp } from '../context/AppContext';
+import { useApp } from '../context/useApp';
 import { Store } from 'lucide-react';
+import { useRestauranteSlug } from '../hooks/useRestauranteSlug';
 
 export default function Home() {
   const navigate = useNavigate();
-  const { config } = useApp();
+  const { config, carregando, erro } = useApp();
+  const slug = useRestauranteSlug();
+
+  if (carregando) {
+    return (
+      <div className="min-h-[100svh] flex items-center justify-center bg-dark text-light">
+        <p className="text-muted">Carregando...</p>
+      </div>
+    );
+  }
+
+  if (erro) {
+    return (
+      <div className="min-h-[100svh] flex flex-col items-center justify-center bg-dark text-light px-6 text-center">
+        <p className="text-red-400">{erro}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-[100svh] flex flex-col items-center justify-center bg-dark text-light px-6 py-12">
@@ -30,7 +48,7 @@ export default function Home() {
         </div>
 
         <button
-          onClick={() => navigate('/cardapio')}
+          onClick={() => navigate(`/${slug}/cardapio`)}
           className="w-full py-4 bg-primary hover:bg-primary-dark text-white font-semibold rounded-xl shadow-lg transition-transform active:scale-95"
         >
           Ver Cardápio

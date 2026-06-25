@@ -1,9 +1,11 @@
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Minus, Plus, Trash2, Send, ShoppingBag } from 'lucide-react';
-import { useApp } from '../context/AppContext';
+import { useApp } from '../context/useApp';
+import { useRestauranteSlug } from '../hooks/useRestauranteSlug';
 
 export default function Carrinho() {
   const navigate = useNavigate();
+  const slug = useRestauranteSlug();
   const {
     carrinho,
     total,
@@ -17,7 +19,7 @@ export default function Carrinho() {
     <div className="min-h-[100svh] bg-bg pb-40">
       <header className="bg-dark text-light">
         <div className="max-w-md mx-auto px-4 py-4 flex items-center gap-3">
-          <button onClick={() => navigate('/cardapio')} className="p-2 -ml-2 hover:bg-white/10 rounded-full">
+          <button onClick={() => navigate(`/${slug}/cardapio`)} className="p-2 -ml-2 hover:bg-white/10 rounded-full">
             <ArrowLeft size={22} />
           </button>
           <h1 className="text-lg font-bold">Seu pedido</h1>
@@ -32,7 +34,7 @@ export default function Carrinho() {
             </div>
             <p className="text-muted">Seu carrinho está vazio.</p>
             <button
-              onClick={() => navigate('/cardapio')}
+              onClick={() => navigate(`/${slug}/cardapio`)}
               className="mt-6 px-6 py-3 bg-primary text-white rounded-full font-semibold"
             >
               Ver cardápio
@@ -115,7 +117,7 @@ export default function Carrinho() {
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-border px-4 py-4">
           <div className="max-w-md mx-auto">
             <button
-              onClick={() => navigate('/checkout')}
+              onClick={() => navigate(`/${slug}/checkout`)}
               className="w-full py-4 bg-primary hover:bg-primary-dark text-white font-bold rounded-2xl shadow-lg flex items-center justify-center gap-2 transition-transform active:scale-95"
             >
               <Send size={20} />

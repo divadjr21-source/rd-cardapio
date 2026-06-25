@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Plus, Save, Trash2, Power, QrCode, Store, Lock, Eye, EyeOff } from 'lucide-react';
-import { useApp } from '../context/AppContext';
+import { useApp } from '../context/useApp';
 import { CATEGORIAS } from '../data/constants';
 import { QRCodeCanvas } from 'qrcode.react';
 

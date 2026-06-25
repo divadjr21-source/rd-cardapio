@@ -1,18 +1,13 @@
-import { createContext, useContext, useEffect, useState } from 'react';
-import { ESTABELECIMENTO, PRODUTOS_INICIAIS } from '../data/constants';
+import { useEffect, useMemo, useState } from 'react';
+import { ESTABELECIMENTO } from '../data/constants';
+import { supabase } from '../lib/supabase';
+import { AppContext } from './AppContext.js';
 
-const AppContext = createContext(null);
-
-export function AppProvider({ children }) {
-  const [config, setConfig] = useState(() => {
-    const saved = localStorage.getItem('cardapio_config');
-    return saved ? { ...ESTABELECIMENTO, ...JSON.parse(saved) } : ESTABELECIMENTO;
-  });
-
-  const [produtos, setProdutos] = useState(() => {
-    const saved = localStorage.getItem('cardapio_produtos');
-    return saved ? JSON.parse(saved) : PRODUTOS_INICIAIS;
-  });
+export function AppProvider({ children, restauranteSlug }) {
+  const [config, setConfig] = useState(ESTABELECIMENTO);
+  const [produtos, setProdutos] = useState([]);
+  const [carregando, setCarregando] = useState(true);
+  const [erro, setErro] = useState(null);
 
   const [carrinho, setCarrinho] = useState(() => {
     const saved = localStorage.getItem('cardapio_carrinho');
@@ -21,11 +16,82 @@ export function AppProvider({ children }) {
 
   const [observacoes, setObservacoes] = useState('');
 
-  useEffect(() => localStorage.setItem('cardapio_produtos', JSON.stringify(produtos)), [produtos]);
-  useEffect(() => localStorage.setItem('cardapio_config', JSON.stringify(config)), [config]);
   useEffect(() => localStorage.setItem('cardapio_carrinho', JSON.stringify(carrinho)), [carrinho]);
 
-  const produtosAtivos = produtos.filter((p) => p.ativo !== false);
+  useEffect(() => {
+    let ignorar = false;
+
+    async function carregarRestaurante() {
+      if (!restauranteSlug) {
+        setCarregando(false);
+        return;
+      }
+
+      setCarregando(true);
+      setErro(null);
+      setConfig(ESTABELECIMENTO);
+      setProdutos([]);
+
+      const { data: restaurante, error: erroRestaurante } = await supabase
+        .from('restaurantes')
+        .select('*')
+        .eq('slug', restauranteSlug)
+        .eq('status', 'ativo')
+        .single();
+
+      if (ignorar) return;
+
+      if (erroRestaurante || !restaurante) {
+        setErro('Restaurante não encontrado.');
+        setCarregando(false);
+        return;
+      }
+
+      setConfig({
+        ...ESTABELECIMENTO,
+        nome: restaurante.nome_comercial,
+        telefone: restaurante.whatsapp_contato || '',
+        slug: restaurante.slug,
+        id: restaurante.id,
+      });
+
+      const { data: produtosDb, error: erroProdutos } = await supabase
+        .from('produtos')
+        .select('nome, preco, categoria, disponivel, descricao, imagem, id, restaurante_id')
+        .eq('restaurante_id', restaurante.id)
+        .eq('disponivel', true)
+        .order('nome');
+
+      if (ignorar) return;
+
+      if (erroProdutos) {
+        setErro('Erro ao carregar produtos.');
+      } else {
+        setProdutos(
+          (produtosDb || []).map((p) => ({
+            id: p.id,
+            nome: p.nome,
+            descricao: p.descricao || '',
+            preco: Number(p.preco),
+            imagem: p.imagem || '',
+            categoria: p.categoria,
+            ativo: p.disponivel,
+            restaurante_id: p.restaurante_id,
+          }))
+        );
+      }
+
+      setCarregando(false);
+    }
+
+    carregarRestaurante();
+
+    return () => {
+      ignorar = true;
+    };
+  }, [restauranteSlug]);
+
+  const produtosAtivos = useMemo(() => produtos.filter((p) => p.ativo !== false), [produtos]);
 
   function adicionarAoCarrinho(produto) {
     setCarrinho((prev) => {
@@ -85,27 +151,6 @@ export function AppProvider({ children }) {
     limparCarrinho();
   }
 
-  function salvarProduto(novoProduto) {
-    setProdutos((prev) => {
-      if (novoProduto.id) {
-        return prev.map((p) => (p.id === novoProduto.id ? novoProduto : p));
-      }
-      const ids = prev.map((p) => p.id);
-      const id = ids.length ? Math.max(...ids) + 1 : 1;
-      return [...prev, { ...novoProduto, id }];
-    });
-  }
-
-  function excluirProduto(id) {
-    setProdutos((prev) => prev.filter((p) => p.id !== id));
-  }
-
-  function alternarAtivo(id) {
-    setProdutos((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, ativo: !p.ativo } : p))
-    );
-  }
-
   return (
     <AppContext.Provider
       value={{
@@ -122,18 +167,11 @@ export function AppProvider({ children }) {
         removerDoCarrinho,
         limparCarrinho,
         enviarPedido,
-        salvarProduto,
-        excluirProduto,
-        alternarAtivo,
+        carregando,
+        erro,
       }}
     >
       {children}
     </AppContext.Provider>
   );
-}
-
-export function useApp() {
-  const ctx = useContext(AppContext);
-  if (!ctx) throw new Error('useApp deve ser usado dentro de AppProvider');
-  return ctx;
 }

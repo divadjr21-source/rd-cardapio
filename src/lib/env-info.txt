@@ -1,0 +1,3 @@
+// Crie um arquivo .env na raiz do projeto com estas variáveis
+// VITE_SUPABASE_URL=https://rd-cardapio-db.supabase.co
+// VITE_SUPABASE_ANON_KEY=sb_publishable_adnMwtzTvKawIHwSjBCy9Q_4hpFJ3rJ

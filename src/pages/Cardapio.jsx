@@ -1,13 +1,15 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ShoppingCart, ArrowLeft, Store } from 'lucide-react';
-import { useApp } from '../context/AppContext';
+import { useApp } from '../context/useApp';
 import ProdutoCard from '../components/ProdutoCard';
 import { CATEGORIAS } from '../data/constants';
+import { useRestauranteSlug } from '../hooks/useRestauranteSlug';
 
 export default function Cardapio() {
   const navigate = useNavigate();
-  const { config, produtosAtivos, carrinho, adicionarAoCarrinho } = useApp();
+  const slug = useRestauranteSlug();
+  const { config, produtosAtivos, carrinho, adicionarAoCarrinho, carregando } = useApp();
   const [categoriaAtiva, setCategoriaAtiva] = useState('todas');
 
   const filtrados =
@@ -21,7 +23,7 @@ export default function Cardapio() {
     <div className="min-h-[100svh] bg-bg pb-28">
       <header className="sticky top-0 z-20 bg-dark text-light shadow">
         <div className="max-w-md mx-auto px-4 py-4 flex items-center gap-3">
-          <button onClick={() => navigate('/')} className="p-2 -ml-2 hover:bg-white/10 rounded-full">
+          <button onClick={() => navigate(`/${slug}`)} className="p-2 -ml-2 hover:bg-white/10 rounded-full">
             <ArrowLeft size={22} />
           </button>
           {config.logo ? (
@@ -65,10 +67,13 @@ export default function Cardapio() {
       </section>
 
       <main className="max-w-md mx-auto px-4 mt-6 grid grid-cols-1 gap-4">
-        {filtrados.map((produto) => (
+        {carregando && (
+          <div className="text-center py-12 text-muted">Carregando produtos...</div>
+        )}
+        {!carregando && filtrados.map((produto) => (
           <ProdutoCard key={produto.id} produto={produto} onAdicionar={adicionarAoCarrinho} />
         ))}
-        {filtrados.length === 0 && (
+        {!carregando && filtrados.length === 0 && (
           <div className="text-center py-12 text-muted">
             Nenhum produto disponível nesta categoria.
           </div>
@@ -77,7 +82,7 @@ export default function Cardapio() {
 
       {totalItens > 0 && (
         <button
-          onClick={() => navigate('/carrinho')}
+          onClick={() => navigate(`/${slug}/carrinho`)}
           className="fixed bottom-6 left-1/2 -translate-x-1/2 z-30 w-[calc(100%-2rem)] max-w-md flex items-center justify-between px-5 py-4 bg-primary text-white rounded-2xl shadow-2xl transition-transform active:scale-95"
         >
           <span className="flex items-center gap-2 font-semibold">

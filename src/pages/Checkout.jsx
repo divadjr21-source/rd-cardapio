@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Send, User, Phone, MapPin } from 'lucide-react';
-import { useApp } from '../context/AppContext';
+import { useApp } from '../context/useApp';
+import { useRestauranteSlug } from '../hooks/useRestauranteSlug';
 
 export default function Checkout() {
   const navigate = useNavigate();
+  const slug = useRestauranteSlug();
   const { carrinho, total, observacoes, enviarPedido } = useApp();
   const [cliente, setCliente] = useState({ nome: '', telefone: '', endereco: '' });
   const [erro, setErro] = useState('');
@@ -14,7 +16,7 @@ export default function Checkout() {
       <div className="min-h-[100svh] bg-bg flex flex-col items-center justify-center p-6 text-center">
         <p className="text-muted">Seu carrinho está vazio.</p>
         <button
-          onClick={() => navigate('/cardapio')}
+          onClick={() => navigate(`/${slug}/cardapio`)}
           className="mt-4 px-6 py-3 bg-primary text-white rounded-full font-semibold"
         >
           Voltar ao cardápio
@@ -30,14 +32,14 @@ export default function Checkout() {
       return;
     }
     enviarPedido(cliente);
-    navigate('/obrigado');
+    navigate(`/${slug}/obrigado`);
   };
 
   return (
     <div className="min-h-[100svh] bg-bg pb-32">
       <header className="bg-dark text-light">
         <div className="max-w-md mx-auto px-4 py-4 flex items-center gap-3">
-          <button onClick={() => navigate('/carrinho')} className="p-2 -ml-2 hover:bg-white/10 rounded-full">
+          <button onClick={() => navigate(`/${slug}/carrinho`)} className="p-2 -ml-2 hover:bg-white/10 rounded-full">
             <ArrowLeft size={22} />
           </button>
           <h1 className="text-lg font-bold">Finalizar pedido</h1>
