@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Save, Trash2, Power, QrCode, Store } from 'lucide-react';
+import { ArrowLeft, Plus, Save, Trash2, Power, QrCode, Store, Lock, Eye, EyeOff } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { CATEGORIAS } from '../data/constants';
 import { QRCodeCanvas } from 'qrcode.react';
+
+const SENHA_ADMIN = 'chef123';
 
 function ProdutoForm({ produtoInicial, onSalvar, onCancelar }) {
   const [produto, setProduto] = useState(
@@ -100,9 +102,74 @@ function ProdutoForm({ produtoInicial, onSalvar, onCancelar }) {
   );
 }
 
+function LoginAdmin({ onEntrar }) {
+  const [senha, setSenha] = useState('');
+  const [erro, setErro] = useState(false);
+  const [mostrarSenha, setMostrarSenha] = useState(false);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (senha === SENHA_ADMIN) {
+      onEntrar();
+    } else {
+      setErro(true);
+      setSenha('');
+    }
+  };
+
+  return (
+    <div className="min-h-[100svh] bg-bg flex flex-col items-center justify-center px-6">
+      <div className="w-full max-w-sm bg-white rounded-2xl p-6 border border-border shadow-lg">
+        <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
+          <Lock size={28} className="text-primary" />
+        </div>
+        <h1 className="text-xl font-bold text-dark text-center">Painel Administrativo</h1>
+        <p className="text-sm text-muted text-center mt-1 mb-5">
+          Digite a senha para continuar.
+        </p>
+        <form onSubmit={handleSubmit} className="space-y-3">
+          <div className="relative">
+            <input
+              type={mostrarSenha ? 'text' : 'password'}
+              value={senha}
+              onChange={(e) => {
+                setSenha(e.target.value);
+                setErro(false);
+              }}
+              placeholder="Senha"
+              className="w-full px-4 py-3 pr-10 bg-bg border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+            <button
+              type="button"
+              onClick={() => setMostrarSenha((prev) => !prev)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted"
+            >
+              {mostrarSenha ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </div>
+          {erro && (
+            <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg text-center">
+              Senha incorreta.
+            </p>
+          )}
+          <button
+            type="submit"
+            className="w-full py-3 bg-primary text-white rounded-xl font-semibold shadow"
+          >
+            Entrar
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 export default function Admin() {
   const navigate = useNavigate();
   const { config, setConfig, produtos, salvarProduto, excluirProduto, alternarAtivo } = useApp();
+  const [autenticado, setAutenticado] = useState(() =>
+    sessionStorage.getItem('cardapio_admin_auth') === '1'
+  );
   const [editando, setEditando] = useState(null);
   const [aba, setAba] = useState('produtos');
   const [configLocal, setConfigLocal] = useState(config);
@@ -110,6 +177,17 @@ export default function Admin() {
   const cardapioUrl = typeof window !== 'undefined'
     ? `${window.location.origin}/cardapio`
     : '/cardapio';
+
+  if (!autenticado) {
+    return (
+      <LoginAdmin
+        onEntrar={() => {
+          sessionStorage.setItem('cardapio_admin_auth', '1');
+          setAutenticado(true);
+        }}
+      />
+    );
+  }
 
   const salvarConfig = (e) => {
     e.preventDefault();
