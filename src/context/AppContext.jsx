@@ -1,9 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { ESTABELECIMENTO } from '../data/constants';
 import { supabase } from '../lib/supabase';
 import { AppContext } from './AppContext.js';
 
-export function AppProvider({ children, restauranteSlug }) {
+export function AppProvider({ children }) {
+  const location = useLocation();
+  const restauranteSlug = location.pathname.split('/')[1] || null;
   const [config, setConfig] = useState(ESTABELECIMENTO);
   const [produtos, setProdutos] = useState([]);
   const [carregando, setCarregando] = useState(true);
