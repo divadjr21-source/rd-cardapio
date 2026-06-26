@@ -384,6 +384,21 @@ export function AppProvider({ children }) {
     return data || [];
   }
 
+  async function listarPedidosFn({ restauranteId, inicio, fim }) {
+    let q = supabase
+      .from('pedidos')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (restauranteId) q = q.eq('restaurante_id', restauranteId);
+    if (inicio) q = q.gte('created_at', inicio);
+    if (fim) q = q.lte('created_at', fim);
+
+    const { data, error } = await q;
+    if (error) throw error;
+    return data || [];
+  }
+
   async function selecionarRestaurante(restaurante) {
     setConfig({
       ...ESTABELECIMENTO,
