@@ -206,12 +206,6 @@ export default function Admin() {
     carregarPedidos();
   }, [aba, config, perfil, isSuperAdmin, periodoInicio, periodoFim, listarPedidos]);
 
-  useEffect(() => {
-    if (isSuperAdmin) {
-      listarRestaurantes().then(setRestaurantes);
-    }
-  }, [isSuperAdmin, listarRestaurantes]);
-
   const resumo = useMemo(() => {
     const total = pedidos.reduce((acc, p) => acc + Number(p.total), 0);
     return { total, quantidade: pedidos.length, ticketMedio: pedidos.length ? total / pedidos.length : 0 };
