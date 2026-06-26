@@ -1,13 +1,11 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ShoppingCart, ArrowLeft, Store } from 'lucide-react';
+import { ShoppingCart, Store } from 'lucide-react';
 import { useApp } from '../context/useApp';
 import ProdutoCard from '../components/ProdutoCard';
 import { CATEGORIAS } from '../data/constants';
 import { useRestauranteSlug } from '../hooks/useRestauranteSlug';
 
 export default function Cardapio() {
-  const navigate = useNavigate();
   const slug = useRestauranteSlug();
   const { config, produtosAtivos, carrinho, adicionarAoCarrinho, carregando } = useApp();
   const [categoriaAtiva, setCategoriaAtiva] = useState('todas');
@@ -23,15 +21,13 @@ export default function Cardapio() {
     <div className="min-h-[100svh] bg-bg pb-28">
       <header className="sticky top-0 z-20 bg-dark text-light shadow">
         <div className="max-w-md mx-auto px-4 py-4 flex items-center gap-3">
-          <button onClick={() => navigate(`/${slug}`)} className="p-2 -ml-2 hover:bg-white/10 rounded-full">
-            <ArrowLeft size={22} />
-          </button>
+          <div className="w-10 h-10"></div>
           {config.logo ? (
             <img src={config.logo} alt="" className="w-10 h-10 rounded-full object-cover" />
           ) : (
             <Store size={28} className="text-primary" />
           )}
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0 ml-1">
             <h1 className="text-base font-bold truncate">{config.nome}</h1>
             <p className="text-xs text-gray-400">Cardápio digital</p>
           </div>
