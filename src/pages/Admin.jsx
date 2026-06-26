@@ -172,10 +172,11 @@ export default function Admin() {
   const [salvandoSuper, setSalvandoSuper] = useState(false);
   const [erroTela, setErroTela] = useState('');
   const [usuarios, setUsuarios] = useState([]);
+  const [restaurantesLista, setRestaurantesLista] = useState([]);
 
   useEffect(() => {
     if (isSuperAdmin && (aba === 'lojas' || aba === 'usuarios')) {
-      listarRestaurantes().then(setRestaurantes);
+      listarRestaurantes().then(setRestaurantesLista);
       if (aba === 'usuarios') listarUsuarios().then(setUsuarios);
     }
   }, [isSuperAdmin, aba, listarRestaurantes, listarUsuarios]);
@@ -599,11 +600,11 @@ export default function Admin() {
             </form>
 
             <div className="bg-white rounded-2xl border border-border overflow-hidden">
-              {restaurantes.length === 0 ? (
+              {restaurantesLista.length === 0 ? (
                 <p className="p-6 text-center text-muted text-sm">Nenhuma loja cadastrada.</p>
               ) : (
                 <ul className="divide-y divide-gray-100">
-                  {restaurantes.map((r) => (
+                  {restaurantesLista.map((r) => (
                     <li key={r.id} className="p-4 flex items-center justify-between">
                       <div>
                         <p className="font-semibold text-dark text-sm">{r.nome_comercial}</p>
@@ -657,7 +658,7 @@ export default function Admin() {
                 className="w-full px-3 py-2 bg-bg border border-border rounded-lg text-sm"
               >
                 <option value="">Selecione a loja</option>
-                {restaurantes.map((r) => (
+                {restaurantesLista.map((r) => (
                   <option key={r.id} value={r.id}>
                     {r.nome_comercial}
                   </option>

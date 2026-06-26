@@ -7,7 +7,9 @@ import { AppContext } from './AppContext.js';
 export function AppProvider({ children }) {
   const location = useLocation();
   const hashPath = location.hash.replace(/^#/, '') || location.pathname;
-  const restauranteSlug = hashPath.split('/').filter(Boolean)[0] || null;
+  const pathParts = hashPath.split('/').filter(Boolean);
+  const isAdminRoute = pathParts[0] === 'login' || pathParts[0] === 'admin';
+  const restauranteSlug = isAdminRoute ? null : pathParts[0] || null;
   const [config, setConfig] = useState(ESTABELECIMENTO);
   const [produtos, setProdutos] = useState([]);
   const [carregando, setCarregando] = useState(true);
