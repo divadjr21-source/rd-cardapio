@@ -12,6 +12,7 @@ import {
   Users,
   Home,
   Utensils,
+  Loader2,
 } from 'lucide-react';
 import { useApp } from '../context/useApp';
 import { CATEGORIAS } from '../data/constants';
@@ -144,6 +145,7 @@ export default function Admin() {
     alternarAtivo,
     usuario,
     perfil,
+    verificandoSessao,
     isSuperAdmin,
     isLojista,
     restaurantes,
@@ -169,19 +171,31 @@ export default function Admin() {
   const [novoUsuario, setNovoUsuario] = useState({ email: '', senha: '', nome: '', restaurante_id: '' });
   const [salvandoSuper, setSalvandoSuper] = useState(false);
 
+  const [verificandoAcesso, setVerificandoAcesso] = useState(true);
+
   useEffect(() => {
     setConfigLocal(config);
   }, [config]);
 
   useEffect(() => {
+    // Aguarda sessão ser verificada
+    if (verificandoSessao) return;
+
     if (!usuario) {
-      navigate('/admin');
+      window.location.href = '/#/login';
       return;
     }
+
     if (isLojista) {
       setAba('relatorios');
     }
-  }, [usuario, isLojista, navigate]);
+  }, [usuario, perfil, isLojista, verificandoSessao]);
+
+  useEffect(() => {
+    if (!verificandoSessao) {
+      setVerificandoAcesso(false);
+    }
+  }, [verificandoSessao]);
 
   useEffect(() => {
     async function carregarPedidos() {
@@ -218,6 +232,15 @@ export default function Admin() {
       ticketMedio: pedidos.length ? total / pedidos.length : 0,
     };
   }, [pedidos]);
+
+  if (verificandoAcesso || verificandoSessao) {
+    return (
+      <div className="min-h-[100svh] flex flex-col items-center justify-center bg-dark text-light gap-4">
+        <Loader2 className="animate-spin text-primary" size={40} />
+        <p className="text-muted">Verificando acesso...</p>
+      </div>
+    );
+  }
 
   if (!usuario) return null;
 

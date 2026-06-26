@@ -9,7 +9,8 @@ export function AppProvider({ children, restauranteSlug }) {
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState(null);
   const [usuario, setUsuario] = useState(null);
-  const [perfil, setPerfil] = useState(null);
+  const [perfil, setPerfil] = useState(undefined);
+  const [verificandoSessao, setVerificandoSessao] = useState(true);
   const [restaurantes, setRestaurantes] = useState([]);
 
   const [carrinho, setCarrinho] = useState(() => {
@@ -27,6 +28,7 @@ export function AppProvider({ children, restauranteSlug }) {
     async function carregarPerfil(userId) {
       if (!userId) {
         setPerfil(null);
+        setVerificandoSessao(false);
         return;
       }
       const { data, error } = await supabase
@@ -53,18 +55,26 @@ export function AppProvider({ children, restauranteSlug }) {
           await recarregarProdutos(data.restaurante_id);
         }
       }
+      setVerificandoSessao(false);
     }
 
     supabase.auth.getSession().then(({ data }) => {
       setUsuario(data.session?.user || null);
-      if (data.session?.user) carregarPerfil(data.session.user.id);
+      if (data.session?.user) {
+        carregarPerfil(data.session.user.id);
+      } else {
+        setVerificandoSessao(false);
+      }
     });
 
     const { data: listener } = supabase.auth.onAuthStateChange((_, session) => {
       const user = session?.user || null;
       setUsuario(user);
       if (user) carregarPerfil(user.id);
-      else setPerfil(null);
+      else {
+        setPerfil(null);
+        setVerificandoSessao(false);
+      }
     });
 
     return () => {
@@ -422,6 +432,7 @@ export function AppProvider({ children, restauranteSlug }) {
         erro,
         usuario,
         perfil,
+        verificandoSessao,
         isSuperAdmin,
         isLojista,
         restaurantes,
