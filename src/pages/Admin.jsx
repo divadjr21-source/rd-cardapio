@@ -262,11 +262,24 @@ export default function Admin() {
     setSalvandoConfig(false);
   }
 
+  function normalizarSlug(valor) {
+    return valor
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+  }
+
   async function handleCriarRestaurante(e) {
     e.preventDefault();
     setSalvandoSuper(true);
     try {
-      await criarRestaurante(novoRestaurante);
+      const payload = {
+        ...novoRestaurante,
+        slug: normalizarSlug(novoRestaurante.slug || novoRestaurante.nome_comercial),
+      };
+      await criarRestaurante(payload);
       setNovoRestaurante({ slug: '', nome_comercial: '', whatsapp_contato: '' });
       alert('Loja criada com sucesso!');
     } catch (err) {
