@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useApp } from '../context/useApp';
+import { CATEGORIAS } from '../data/constants';
+import { QRCodeCanvas } from 'qrcode.react';
 import {
   Plus,
   Save,
@@ -14,23 +16,24 @@ import {
   Utensils,
   Loader2,
 } from 'lucide-react';
-import { useApp } from '../context/useApp';
-import { CATEGORIAS } from '../data/constants';
-import { QRCodeCanvas } from 'qrcode.react';
 
 function formatarData(data) {
-  const d = new Date(data);
-  return d.toLocaleString('pt-BR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  try {
+    const d = new Date(data);
+    return d.toLocaleString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  } catch {
+    return data;
+  }
 }
 
 function formatarMoeda(valor) {
-  return `R$ ${Number(valor).toFixed(2).replace('.', ',')}`;
+  return `R$ ${Number(valor || 0).toFixed(2).replace('.', ',')}`;
 }
 
 function hoje() {
@@ -66,9 +69,7 @@ function ProdutoForm({ produtoInicial, onSalvar, onCancelar, restauranteId }) {
 
   return (
     <form onSubmit={handleSubmit} className="bg-white rounded-2xl p-4 border border-border space-y-3 mt-4">
-      <h3 className="font-bold text-dark">
-        {produtoInicial ? 'Editar produto' : 'Novo produto'}
-      </h3>
+      <h3 className="font-bold text-dark">{produtoInicial ? 'Editar produto' : 'Novo produto'}</h3>
       <input
         required
         placeholder="Nome"
@@ -136,7 +137,6 @@ function ProdutoForm({ produtoInicial, onSalvar, onCancelar, restauranteId }) {
 }
 
 export default function Admin() {
-  const navigate = useNavigate();
   const {
     config,
     produtos,
@@ -145,7 +145,6 @@ export default function Admin() {
     alternarAtivo,
     usuario,
     perfil,
-    verificandoSessao,
     isSuperAdmin,
     isLojista,
     restaurantes,
@@ -165,13 +164,10 @@ export default function Admin() {
   const [pedidos, setPedidos] = useState([]);
   const [periodoInicio, setPeriodoInicio] = useState(primeiroDiaMes());
   const [periodoFim, setPeriodoFim] = useState(hoje());
-
-  // Super Admin forms
   const [novoRestaurante, setNovoRestaurante] = useState({ slug: '', nome_comercial: '', whatsapp_contato: '' });
   const [novoUsuario, setNovoUsuario] = useState({ email: '', senha: '', nome: '', restaurante_id: '' });
   const [salvandoSuper, setSalvandoSuper] = useState(false);
-
-  const [verificandoAcesso, setVerificandoAcesso] = useState(true);
+  const [erroTela, setErroTela] = useState('');
 
   useEffect(() => {
     setConfigLocal(config);
@@ -179,9 +175,13 @@ export default function Admin() {
 
   useEffect(() => {
     if (!usuario) {
-      window.location.href = '/#/login';
-      return;
+      setErroTela('Usuário não autenticado. Redirecionando para login...');
+      const t = setTimeout(() => {
+        window.location.href = '/#/login';
+      }, 1500);
+      return () => clearTimeout(t);
     }
+    setErroTela('');
     if (isLojista && aba !== 'relatorios') {
       setAba('relatorios');
     }
@@ -192,7 +192,6 @@ export default function Admin() {
       if (aba !== 'relatorios') return;
       const restauranteId = isSuperAdmin ? config?.id : perfil?.restaurante_id;
       if (!restauranteId) return;
-
       try {
         const data = await listarPedidos({
           restauranteId,
@@ -204,7 +203,6 @@ export default function Admin() {
         console.error('Erro ao carregar pedidos:', err);
       }
     }
-
     carregarPedidos();
   }, [aba, config, perfil, isSuperAdmin, periodoInicio, periodoFim, listarPedidos]);
 
@@ -216,23 +214,17 @@ export default function Admin() {
 
   const resumo = useMemo(() => {
     const total = pedidos.reduce((acc, p) => acc + Number(p.total), 0);
-    return {
-      total,
-      quantidade: pedidos.length,
-      ticketMedio: pedidos.length ? total / pedidos.length : 0,
-    };
+    return { total, quantidade: pedidos.length, ticketMedio: pedidos.length ? total / pedidos.length : 0 };
   }, [pedidos]);
 
-  if (verificandoAcesso) {
+  if (!usuario) {
     return (
-      <div className="min-h-[100svh] flex flex-col items-center justify-center bg-dark text-light gap-4">
+      <div className="min-h-[100svh] flex flex-col items-center justify-center bg-dark text-light gap-4 p-6 text-center">
         <Loader2 className="animate-spin text-primary" size={40} />
-        <p className="text-muted">Verificando acesso...</p>
+        <p className="text-muted">{erroTela || 'Verificando autenticação...'}</p>
       </div>
     );
   }
-
-  if (!usuario) return null;
 
   const cardapioUrl = typeof window !== 'undefined'
     ? `${window.location.origin}/#/${config.slug || ''}/cardapio`
@@ -330,7 +322,7 @@ export default function Admin() {
           <button
             onClick={async () => {
               await logoutAdmin();
-              navigate('/admin');
+              window.location.href = '/#/login';
             }}
             className="p-2 hover:bg-white/10 rounded-full"
             title="Sair"
@@ -448,9 +440,7 @@ export default function Admin() {
                   <img src={p.imagem} alt="" className="w-16 h-16 object-cover rounded-lg" />
                   <div className="flex-1 min-w-0">
                     <h3 className="font-bold text-dark truncate">{p.nome}</h3>
-                    <p className="text-sm text-primary font-semibold">
-                      {formatarMoeda(p.preco)}
-                    </p>
+                    <p className="text-sm text-primary font-semibold">{formatarMoeda(p.preco)}</p>
                     <p className="text-xs text-muted truncate">
                       {CATEGORIAS.find((c) => c.id === p.categoria)?.nome}
                     </p>
