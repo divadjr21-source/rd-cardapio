@@ -295,7 +295,7 @@ export function AppProvider({ children }) {
     if (error) throw error;
     const data = await listarRestaurantes();
     setRestaurantes(data);
-  }, [listarRestaurantes]);
+  }, [listarRestaurantes, setRestaurantes]);
 
   const criarUsuarioLojista = useCallback(async ({ email, senha, restaurante_id, nome }) => {
     const { error } = await supabase.rpc('criar_usuario_lojista', {
