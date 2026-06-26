@@ -31,9 +31,10 @@ export function AppProvider({ children, restauranteSlug }) {
         setVerificandoSessao(false);
         return;
       }
+
       const { data, error } = await supabase
         .from('perfis')
-        .select('*, restaurantes:restaurante_id(*)')
+        .select('*')
         .eq('id', userId)
         .single();
 
@@ -46,14 +47,22 @@ export function AppProvider({ children, restauranteSlug }) {
         console.log('Perfil carregado:', data);
         setPerfil(data);
         if (data.papel === 'lojista' && data.restaurante_id) {
-          setConfig({
-            ...ESTABELECIMENTO,
-            id: data.restaurante_id,
-            nome: data.restaurantes?.nome_comercial || '',
-            telefone: data.restaurantes?.whatsapp_contato || '',
-            slug: data.restaurantes?.slug || '',
-          });
-          await recarregarProdutos(data.restaurante_id);
+          const { data: rData } = await supabase
+            .from('restaurantes')
+            .select('*')
+            .eq('id', data.restaurante_id)
+            .single();
+
+          if (rData) {
+            setConfig({
+              ...ESTABELECIMENTO,
+              id: rData.id,
+              nome: rData.nome_comercial || '',
+              telefone: rData.whatsapp_contato || '',
+              slug: rData.slug || '',
+            });
+            await recarregarProdutos(rData.id);
+          }
         }
       }
       setVerificandoSessao(false);

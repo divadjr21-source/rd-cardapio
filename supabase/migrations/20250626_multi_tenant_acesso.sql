@@ -56,14 +56,11 @@ CREATE INDEX IF NOT EXISTS idx_pedidos_created_at ON public.pedidos(created_at);
 ALTER TABLE public.perfis ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.pedidos ENABLE ROW LEVEL SECURITY;
 
--- perfis: super admin lê tudo; lojista lê apenas o próprio perfil
+-- perfis: cada usuário vê o próprio perfil
 DROP POLICY IF EXISTS "perfis_select_super" ON public.perfis;
-CREATE POLICY "perfis_select_super" ON public.perfis
-  FOR SELECT TO authenticated
-  USING (auth.uid() IN (SELECT id FROM public.perfis WHERE papel = 'super_admin'));
-
 DROP POLICY IF EXISTS "perfis_select_proprio" ON public.perfis;
-CREATE POLICY "perfis_select_proprio" ON public.perfis
+DROP POLICY IF EXISTS "perfis_select" ON public.perfis;
+CREATE POLICY "perfis_select" ON public.perfis
   FOR SELECT TO authenticated
   USING (auth.uid() = id);
 
@@ -72,19 +69,18 @@ CREATE POLICY "perfis_insert_super" ON public.perfis
   FOR INSERT TO authenticated
   WITH CHECK (auth.uid() IN (SELECT id FROM public.perfis WHERE papel = 'super_admin'));
 
--- pedidos: super admin lê tudo; lojista lê apenas do próprio restaurante
+-- pedidos: lojista vê apenas do próprio restaurante; super_admin vê todos (verificado no app)
 DROP POLICY IF EXISTS "pedidos_select_super" ON public.pedidos;
-CREATE POLICY "pedidos_select_super" ON public.pedidos
-  FOR SELECT TO authenticated
-  USING (auth.uid() IN (SELECT id FROM public.perfis WHERE papel = 'super_admin'));
-
 DROP POLICY IF EXISTS "pedidos_select_lojista" ON public.pedidos;
-CREATE POLICY "pedidos_select_lojista" ON public.pedidos
+CREATE POLICY "pedidos_select" ON public.pedidos
   FOR SELECT TO authenticated
   USING (
     auth.uid() IN (
-      SELECT id FROM public.perfis
-      WHERE id = auth.uid() AND restaurante_id = pedidos.restaurante_id
+      SELECT p.id FROM public.perfis p
+      WHERE p.id = auth.uid() AND (
+        p.papel = 'super_admin' OR
+        (p.papel = 'lojista' AND p.restaurante_id = pedidos.restaurante_id)
+      )
     )
   );
 
