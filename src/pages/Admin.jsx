@@ -178,24 +178,14 @@ export default function Admin() {
   }, [config]);
 
   useEffect(() => {
-    // Aguarda sessão ser verificada
-    if (verificandoSessao) return;
-
     if (!usuario) {
       window.location.href = '/#/login';
       return;
     }
-
-    if (isLojista) {
+    if (isLojista && aba !== 'relatorios') {
       setAba('relatorios');
     }
-  }, [usuario, perfil, isLojista, verificandoSessao]);
-
-  useEffect(() => {
-    if (!verificandoSessao) {
-      setVerificandoAcesso(false);
-    }
-  }, [verificandoSessao]);
+  }, [usuario, perfil, isLojista, aba]);
 
   useEffect(() => {
     async function carregarPedidos() {
@@ -233,7 +223,7 @@ export default function Admin() {
     };
   }, [pedidos]);
 
-  if (verificandoAcesso || verificandoSessao) {
+  if (verificandoAcesso) {
     return (
       <div className="min-h-[100svh] flex flex-col items-center justify-center bg-dark text-light gap-4">
         <Loader2 className="animate-spin text-primary" size={40} />
