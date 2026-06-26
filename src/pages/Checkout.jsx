@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Send, User, Phone, MapPin } from 'lucide-react';
+import { ArrowLeft, Send, User, Phone, MapPin, Navigation } from 'lucide-react';
 import { useApp } from '../context/useApp';
 import { useRestauranteSlug } from '../hooks/useRestauranteSlug';
 
@@ -10,6 +10,8 @@ export default function Checkout() {
   const { carrinho, total, observacoes, enviarPedido } = useApp();
   const [cliente, setCliente] = useState({ nome: '', telefone: '', endereco: '' });
   const [erro, setErro] = useState('');
+  const [localizacao, setLocalizacao] = useState(null);
+  const [buscandoLocal, setBuscandoLocal] = useState(false);
 
   if (carrinho.length === 0) {
     return (
@@ -31,8 +33,33 @@ export default function Checkout() {
       setErro('Preencha seu nome e telefone.');
       return;
     }
-    enviarPedido(cliente);
+    enviarPedido(cliente, localizacao);
     navigate(`/${slug}/obrigado`);
+  };
+
+  const capturarLocalizacao = () => {
+    if (!navigator.geolocation) {
+      setErro('Geolocalização não é suportada pelo navegador.');
+      return;
+    }
+
+    setBuscandoLocal(true);
+    setErro('');
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const coords = {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        };
+        setLocalizacao(coords);
+        setBuscandoLocal(false);
+      },
+      (err) => {
+        setBuscandoLocal(false);
+        setErro('Não foi possível obter sua localização. Verifique as permissões. ' + (err?.message || ''));
+      }
+    );
   };
 
   return (
@@ -86,6 +113,22 @@ export default function Checkout() {
                 placeholder="Rua, número, bairro"
                 className="w-full px-4 py-3 bg-bg border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary"
               />
+
+              <button
+                type="button"
+                onClick={capturarLocalizacao}
+                disabled={buscandoLocal}
+                className="mt-2 flex items-center gap-2 text-sm font-semibold text-primary hover:text-primary-dark disabled:text-gray-400"
+              >
+                <Navigation size={16} />
+                {buscandoLocal ? 'Obtendo localização...' : localizacao ? 'Localização capturada' : 'Usar minha localização atual'}
+              </button>
+
+              {localizacao && (
+                <p className="mt-2 text-xs text-green-600 bg-green-50 px-3 py-2 rounded-lg">
+                  Coordenadas: {localizacao.lat.toFixed(6)}, {localizacao.lng.toFixed(6)}
+                </p>
+              )}
             </div>
           </div>
 

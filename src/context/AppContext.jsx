@@ -9,6 +9,8 @@ export function AppProvider({ children, restauranteSlug }) {
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState(null);
   const [usuario, setUsuario] = useState(null);
+  const [perfil, setPerfil] = useState(null);
+  const [restaurantes, setRestaurantes] = useState([]);
 
   const [carrinho, setCarrinho] = useState(() => {
     const saved = localStorage.getItem('cardapio_carrinho');
@@ -20,21 +22,65 @@ export function AppProvider({ children, restauranteSlug }) {
   useEffect(() => localStorage.setItem('cardapio_carrinho', JSON.stringify(carrinho)), [carrinho]);
 
   useEffect(() => {
+    let ignorar = false;
+
+    async function carregarPerfil(userId) {
+      if (!userId) {
+        setPerfil(null);
+        return;
+      }
+      const { data, error } = await supabase
+        .from('perfis')
+        .select('*, restaurantes:restaurante_id(*)')
+        .eq('id', userId)
+        .single();
+
+      if (ignorar) return;
+
+      if (error) {
+        console.error('Erro ao carregar perfil:', error);
+        setPerfil(null);
+      } else {
+        setPerfil(data);
+        if (data.papel === 'lojista' && data.restaurante_id) {
+          setConfig({
+            ...ESTABELECIMENTO,
+            id: data.restaurante_id,
+            nome: data.restaurantes?.nome_comercial || '',
+            telefone: data.restaurantes?.whatsapp_contato || '',
+            slug: data.restaurantes?.slug || '',
+          });
+          await recarregarProdutos(data.restaurante_id);
+        }
+      }
+    }
+
     supabase.auth.getSession().then(({ data }) => {
       setUsuario(data.session?.user || null);
+      if (data.session?.user) carregarPerfil(data.session.user.id);
     });
+
     const { data: listener } = supabase.auth.onAuthStateChange((_, session) => {
-      setUsuario(session?.user || null);
+      const user = session?.user || null;
+      setUsuario(user);
+      if (user) carregarPerfil(user.id);
+      else setPerfil(null);
     });
-    return () => listener.subscription.unsubscribe();
+
+    return () => {
+      ignorar = true;
+      listener.subscription.unsubscribe();
+    };
   }, []);
 
   useEffect(() => {
     let ignorar = false;
 
     async function carregarRestaurante() {
+      // Contexto administrativo: sem slug de restaurante
       if (!restauranteSlug) {
         setCarregando(false);
+        setErro(null);
         return;
       }
 
@@ -71,6 +117,15 @@ export function AppProvider({ children, restauranteSlug }) {
       if (!ignorar) setCarregando(false);
     }
 
+    async function carregarRestaurantesAdmin() {
+      if (restauranteSlug) return;
+      if (perfil?.papel !== 'super_admin') return;
+
+      const { data, error } = await supabase.from('restaurantes').select('*').order('nome_comercial');
+      if (ignorar) return;
+      if (!error) setRestaurantes(data || []);
+    }
+
     async function recarregarProdutos(restauranteId) {
       const { data: produtosDb, error: erroProdutos } = await supabase
         .from('produtos')
@@ -100,11 +155,12 @@ export function AppProvider({ children, restauranteSlug }) {
     }
 
     carregarRestaurante();
+    carregarRestaurantesAdmin();
 
     return () => {
       ignorar = true;
     };
-  }, [restauranteSlug]);
+  }, [restauranteSlug, perfil]);
 
   async function recarregarProdutos(restauranteId) {
     const { data } = await supabase
@@ -128,7 +184,7 @@ export function AppProvider({ children, restauranteSlug }) {
   }
 
   async function loginAdmin(email, senha) {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password: senha });
+    const { error } = await supabase.auth.signInWithPassword({ email, password: senha });
     return { sucesso: !error, error };
   }
 
@@ -198,6 +254,65 @@ export function AppProvider({ children, restauranteSlug }) {
     setConfig(novaConfig);
   }
 
+  // ========== Funções Super Admin e lojista ==========
+
+  async function listarRestaurantes() {
+    const { data, error } = await supabase.from('restaurantes').select('*').order('nome_comercial');
+    if (error) throw error;
+    return data || [];
+  }
+
+  async function criarRestaurante({ slug, nome_comercial, whatsapp_contato }) {
+    const { error } = await supabase.from('restaurantes').insert({
+      slug,
+      nome_comercial,
+      whatsapp_contato,
+      status: 'ativo',
+    });
+    if (error) throw error;
+    const data = await listarRestaurantes();
+    setRestaurantes(data);
+  }
+
+  async function criarUsuarioLojista({ email, senha, restaurante_id, nome }) {
+    const { error } = await supabase.rpc('criar_usuario_lojista', {
+      p_email: email,
+      p_senha: senha,
+      p_restaurante_id: restaurante_id,
+      p_nome: nome,
+    });
+    if (error) throw error;
+  }
+
+  async function listarPedidos({ restauranteId, inicio, fim }) {
+    let q = supabase
+      .from('pedidos')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (restauranteId) q = q.eq('restaurante_id', restauranteId);
+    if (inicio) q = q.gte('created_at', inicio);
+    if (fim) q = q.lte('created_at', fim);
+
+    const { data, error } = await q;
+    if (error) throw error;
+    return data || [];
+  }
+
+  async function selecionarRestaurante(restaurante) {
+    setConfig({
+      ...ESTABELECIMENTO,
+      id: restaurante.id,
+      nome: restaurante.nome_comercial,
+      telefone: restaurante.whatsapp_contato || '',
+      slug: restaurante.slug,
+    });
+    await recarregarProdutos(restaurante.id);
+  }
+
+  const isSuperAdmin = perfil?.papel === 'super_admin';
+  const isLojista = perfil?.papel === 'lojista';
+
   const produtosAtivos = useMemo(() => produtos.filter((p) => p.ativo !== false), [produtos]);
 
   function adicionarAoCarrinho(produto) {
@@ -233,16 +348,21 @@ export function AppProvider({ children, restauranteSlug }) {
 
   const total = carrinho.reduce((acc, item) => acc + item.preco * item.quantidade, 0);
 
-  function formatarMensagem(cliente) {
+  function formatarMensagem(cliente, localizacao) {
     const linhas = carrinho.map(
       (item) => `* ${item.quantidade}x ${item.nome} - R$ ${(item.preco * item.quantidade).toFixed(2).replace('.', ',')}`
     );
     const obs = observacoes.trim();
+    const endereco = cliente.endereco?.trim();
+    const mapLink = localizacao
+      ? `Localização: https://www.google.com/maps?q=${localizacao.lat},${localizacao.lng}`
+      : '';
     const partes = [
       'Olá, gostaria de fazer um pedido:',
       `Nome: ${cliente.nome}`,
       `Telefone: ${cliente.telefone}`,
-      cliente.endereco ? `Endereço: ${cliente.endereco}` : '',
+      endereco ? `Endereço: ${endereco}` : '',
+      mapLink,
       'Pedido:',
       ...linhas,
       `Total: R$ ${total.toFixed(2).replace('.', ',')}`,
@@ -251,8 +371,32 @@ export function AppProvider({ children, restauranteSlug }) {
     return partes.filter(Boolean).join('\n');
   }
 
-  function enviarPedido(cliente) {
-    const texto = encodeURIComponent(formatarMensagem(cliente));
+  async function enviarPedido(cliente, localizacao) {
+    const restauranteId = config.id || perfil?.restaurante_id;
+
+    if (restauranteId) {
+      try {
+        const mapLink = localizacao
+          ? `https://www.google.com/maps?q=${localizacao.lat},${localizacao.lng}`
+          : null;
+
+        await supabase.from('pedidos').insert({
+          restaurante_id: restauranteId,
+          cliente_nome: cliente.nome,
+          cliente_telefone: cliente.telefone,
+          cliente_endereco: cliente.endereco || '',
+          localizacao_maps: mapLink,
+          total,
+          observacao: observacoes || '',
+          itens: JSON.stringify(carrinho),
+          status: 'recebido',
+        });
+      } catch (err) {
+        console.error('Erro ao registrar pedido:', err);
+      }
+    }
+
+    const texto = encodeURIComponent(formatarMensagem(cliente, localizacao));
     const url = `https://wa.me/${config.telefone.replace(/\D/g, '')}?text=${texto}`;
     window.open(url, '_blank');
     limparCarrinho();
@@ -277,12 +421,21 @@ export function AppProvider({ children, restauranteSlug }) {
         carregando,
         erro,
         usuario,
+        perfil,
+        isSuperAdmin,
+        isLojista,
+        restaurantes,
         loginAdmin,
         logoutAdmin,
         salvarProduto,
         excluirProduto,
         alternarAtivo,
         salvarConfiguracoes,
+        listarRestaurantes,
+        criarRestaurante,
+        criarUsuarioLojista,
+        listarPedidos,
+        selecionarRestaurante,
       }}
     >
       {children}

@@ -1,4 +1,4 @@
-import { Routes, Route, useParams, useNavigate } from 'react-router-dom';
+import { Routes, Route, useParams, useNavigate, Navigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { AppProvider } from './context/AppContext.jsx';
@@ -7,6 +7,7 @@ import Cardapio from './pages/Cardapio.jsx';
 import Carrinho from './pages/Carrinho.jsx';
 import Checkout from './pages/Checkout.jsx';
 import Obrigado from './pages/Obrigado.jsx';
+import Login from './pages/Login.jsx';
 import Admin from './pages/Admin.jsx';
 import { supabase } from './lib/supabase.js';
 
@@ -21,6 +22,27 @@ function RestauranteLayout() {
         <Route path="checkout" element={<Checkout />} />
         <Route path="obrigado" element={<Obrigado />} />
         <Route path="admin" element={<Admin />} />
+      </Routes>
+    </AppProvider>
+  );
+}
+
+function AdminLayout() {
+  return (
+    <AppProvider>
+      <Routes>
+        <Route path="/" element={<Admin />} />
+        <Route path="*" element={<Navigate to="/admin" replace />} />
+      </Routes>
+    </AppProvider>
+  );
+}
+
+function AuthLayout() {
+  return (
+    <AppProvider>
+      <Routes>
+        <Route path="/" element={<Login />} />
       </Routes>
     </AppProvider>
   );
@@ -85,6 +107,8 @@ export default function App() {
     <div className="relative flex-1">
       <Routes>
         <Route path="/:slug/*" element={<RestauranteLayout />} />
+        <Route path="/admin/*" element={<AdminLayout />} />
+        <Route path="/login/*" element={<AuthLayout />} />
         <Route path="/" element={<RedirectToPrimeiroRestaurante />} />
       </Routes>
     </div>
