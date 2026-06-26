@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { ESTABELECIMENTO } from '../data/constants';
 import { supabase } from '../lib/supabase';
@@ -279,13 +279,13 @@ export function AppProvider({ children }) {
 
   // ========== Funções Super Admin e lojista ==========
 
-  async function listarRestaurantes() {
+  const listarRestaurantes = useCallback(async () => {
     const { data, error } = await supabase.from('restaurantes').select('*').order('nome_comercial');
     if (error) throw error;
     return data || [];
-  }
+  }, []);
 
-  async function criarRestaurante({ slug, nome_comercial, whatsapp_contato }) {
+  const criarRestaurante = useCallback(async ({ slug, nome_comercial, whatsapp_contato }) => {
     const { error } = await supabase.from('restaurantes').insert({
       slug,
       nome_comercial,
@@ -295,9 +295,9 @@ export function AppProvider({ children }) {
     if (error) throw error;
     const data = await listarRestaurantes();
     setRestaurantes(data);
-  }
+  }, [listarRestaurantes]);
 
-  async function criarUsuarioLojista({ email, senha, restaurante_id, nome }) {
+  const criarUsuarioLojista = useCallback(async ({ email, senha, restaurante_id, nome }) => {
     const { error } = await supabase.rpc('criar_usuario_lojista', {
       p_email: email,
       p_senha: senha,
@@ -305,9 +305,9 @@ export function AppProvider({ children }) {
       p_nome: nome,
     });
     if (error) throw error;
-  }
+  }, []);
 
-  async function listarPedidos({ restauranteId, inicio, fim }) {
+  const listarPedidos = useCallback(async ({ restauranteId, inicio, fim }) => {
     let q = supabase
       .from('pedidos')
       .select('*')
@@ -320,9 +320,9 @@ export function AppProvider({ children }) {
     const { data, error } = await q;
     if (error) throw error;
     return data || [];
-  }
+  }, []);
 
-  async function selecionarRestaurante(restaurante) {
+  const selecionarRestaurante = useCallback(async (restaurante) => {
     setConfig({
       ...ESTABELECIMENTO,
       id: restaurante.id,
@@ -331,7 +331,7 @@ export function AppProvider({ children }) {
       slug: restaurante.slug,
     });
     await recarregarProdutos(restaurante.id);
-  }
+  }, []);
 
   const isSuperAdmin = perfil?.papel === 'super_admin';
   const isLojista = perfil?.papel === 'lojista';
