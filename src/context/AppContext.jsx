@@ -43,6 +43,7 @@ export function AppProvider({ children, restauranteSlug }) {
         console.error('Erro ao carregar perfil:', error);
         setPerfil(null);
       } else {
+        console.log('Perfil carregado:', data);
         setPerfil(data);
         if (data.papel === 'lojista' && data.restaurante_id) {
           setConfig({
