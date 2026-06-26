@@ -20,6 +20,7 @@ function RestauranteLayout() {
         <Route path="carrinho" element={<Carrinho />} />
         <Route path="checkout" element={<Checkout />} />
         <Route path="obrigado" element={<Obrigado />} />
+        <Route path="admin" element={<Admin />} />
       </Routes>
     </AppProvider>
   );
@@ -83,7 +84,6 @@ export default function App() {
   return (
     <div className="relative flex-1">
       <Routes>
-        <Route path="/admin" element={<Admin />} />
         <Route path="/:slug/*" element={<RestauranteLayout />} />
         <Route path="/" element={<RedirectToPrimeiroRestaurante />} />
       </Routes>

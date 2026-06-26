@@ -8,6 +8,7 @@ export function AppProvider({ children, restauranteSlug }) {
   const [produtos, setProdutos] = useState([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState(null);
+  const [usuario, setUsuario] = useState(null);
 
   const [carrinho, setCarrinho] = useState(() => {
     const saved = localStorage.getItem('cardapio_carrinho');
@@ -17,6 +18,16 @@ export function AppProvider({ children, restauranteSlug }) {
   const [observacoes, setObservacoes] = useState('');
 
   useEffect(() => localStorage.setItem('cardapio_carrinho', JSON.stringify(carrinho)), [carrinho]);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      setUsuario(data.session?.user || null);
+    });
+    const { data: listener } = supabase.auth.onAuthStateChange((_, session) => {
+      setUsuario(session?.user || null);
+    });
+    return () => listener.subscription.unsubscribe();
+  }, []);
 
   useEffect(() => {
     let ignorar = false;
@@ -55,10 +66,16 @@ export function AppProvider({ children, restauranteSlug }) {
         id: restaurante.id,
       });
 
+      await recarregarProdutos(restaurante.id);
+
+      if (!ignorar) setCarregando(false);
+    }
+
+    async function recarregarProdutos(restauranteId) {
       const { data: produtosDb, error: erroProdutos } = await supabase
         .from('produtos')
         .select('nome, preco, categoria, disponivel, descricao, imagem, id, restaurante_id')
-        .eq('restaurante_id', restaurante.id)
+        .eq('restaurante_id', restauranteId)
         .eq('disponivel', true)
         .order('nome');
 
@@ -80,8 +97,6 @@ export function AppProvider({ children, restauranteSlug }) {
           }))
         );
       }
-
-      setCarregando(false);
     }
 
     carregarRestaurante();
@@ -90,6 +105,98 @@ export function AppProvider({ children, restauranteSlug }) {
       ignorar = true;
     };
   }, [restauranteSlug]);
+
+  async function recarregarProdutos(restauranteId) {
+    const { data } = await supabase
+      .from('produtos')
+      .select('*')
+      .eq('restaurante_id', restauranteId)
+      .order('nome');
+
+    setProdutos(
+      (data || []).map((p) => ({
+        id: p.id,
+        nome: p.nome,
+        descricao: p.descricao || '',
+        preco: Number(p.preco),
+        imagem: p.imagem || '',
+        categoria: p.categoria,
+        ativo: p.disponivel,
+        restaurante_id: p.restaurante_id,
+      }))
+    );
+  }
+
+  async function loginAdmin(email, senha) {
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password: senha });
+    return { sucesso: !error, error };
+  }
+
+  async function logoutAdmin() {
+    await supabase.auth.signOut();
+  }
+
+  async function salvarProduto(produto) {
+    const restauranteId = config.id;
+    if (!restauranteId) throw new Error('Restaurante não identificado.');
+
+    const payload = {
+      nome: produto.nome,
+      descricao: produto.descricao || '',
+      preco: Number(produto.preco),
+      imagem: produto.imagem || '',
+      categoria: produto.categoria,
+      disponivel: produto.ativo !== false,
+      restaurante_id: restauranteId,
+    };
+
+    let error;
+    if (produto.id && typeof produto.id === 'string') {
+      const res = await supabase.from('produtos').update(payload).eq('id', produto.id);
+      error = res.error;
+    } else {
+      const res = await supabase.from('produtos').insert(payload);
+      error = res.error;
+    }
+
+    if (error) throw error;
+    await recarregarProdutos(restauranteId);
+  }
+
+  async function excluirProduto(id) {
+    const restauranteId = config.id;
+    const { error } = await supabase.from('produtos').delete().eq('id', id);
+    if (error) throw error;
+    await recarregarProdutos(restauranteId);
+  }
+
+  async function alternarAtivo(id) {
+    const restauranteId = config.id;
+    const produto = produtos.find((p) => p.id === id);
+    if (!produto) return;
+    const { error } = await supabase
+      .from('produtos')
+      .update({ disponivel: !produto.ativo })
+      .eq('id', id);
+    if (error) throw error;
+    await recarregarProdutos(restauranteId);
+  }
+
+  async function salvarConfiguracoes(novaConfig) {
+    const restauranteId = config.id;
+    if (!restauranteId) throw new Error('Restaurante não identificado.');
+
+    const { error } = await supabase
+      .from('restaurantes')
+      .update({
+        nome_comercial: novaConfig.nome,
+        whatsapp_contato: novaConfig.telefone,
+      })
+      .eq('id', restauranteId);
+
+    if (error) throw error;
+    setConfig(novaConfig);
+  }
 
   const produtosAtivos = useMemo(() => produtos.filter((p) => p.ativo !== false), [produtos]);
 
@@ -169,6 +276,13 @@ export function AppProvider({ children, restauranteSlug }) {
         enviarPedido,
         carregando,
         erro,
+        usuario,
+        loginAdmin,
+        logoutAdmin,
+        salvarProduto,
+        excluirProduto,
+        alternarAtivo,
+        salvarConfiguracoes,
       }}
     >
       {children}

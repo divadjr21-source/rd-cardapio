@@ -1,11 +1,9 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Save, Trash2, Power, QrCode, Store, Lock, Eye, EyeOff } from 'lucide-react';
+import { ArrowLeft, Plus, Save, Trash2, Power, QrCode, Store, Lock, Eye, EyeOff, LogOut } from 'lucide-react';
 import { useApp } from '../context/useApp';
 import { CATEGORIAS } from '../data/constants';
 import { QRCodeCanvas } from 'qrcode.react';
-
-const SENHA_ADMIN = 'chef123';
 
 function ProdutoForm({ produtoInicial, onSalvar, onCancelar }) {
   const [produto, setProduto] = useState(
@@ -103,18 +101,26 @@ function ProdutoForm({ produtoInicial, onSalvar, onCancelar }) {
 }
 
 function LoginAdmin({ onEntrar }) {
+  const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
-  const [erro, setErro] = useState(false);
+  const [erro, setErro] = useState('');
   const [mostrarSenha, setMostrarSenha] = useState(false);
+  const [carregando, setCarregando] = useState(false);
 
-  const handleSubmit = (e) => {
+  const { loginAdmin } = useApp();
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (senha === SENHA_ADMIN) {
-      onEntrar();
-    } else {
-      setErro(true);
-      setSenha('');
+    setErro('');
+    setCarregando(true);
+
+    const { sucesso, error } = await loginAdmin(email, senha);
+
+    if (!sucesso) {
+      setErro(error?.message || 'Email ou senha incorretos.');
     }
+
+    setCarregando(false);
   };
 
   return (
@@ -125,17 +131,21 @@ function LoginAdmin({ onEntrar }) {
         </div>
         <h1 className="text-xl font-bold text-dark text-center">Painel Administrativo</h1>
         <p className="text-sm text-muted text-center mt-1 mb-5">
-          Digite a senha para continuar.
+          Entre com email e senha.
         </p>
         <form onSubmit={handleSubmit} className="space-y-3">
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => { setEmail(e.target.value); setErro(''); }}
+            placeholder="Email"
+            className="w-full px-4 py-3 bg-bg border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary"
+          />
           <div className="relative">
             <input
               type={mostrarSenha ? 'text' : 'password'}
               value={senha}
-              onChange={(e) => {
-                setSenha(e.target.value);
-                setErro(false);
-              }}
+              onChange={(e) => { setSenha(e.target.value); setErro(''); }}
               placeholder="Senha"
               className="w-full px-4 py-3 pr-10 bg-bg border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary"
             />
@@ -149,14 +159,15 @@ function LoginAdmin({ onEntrar }) {
           </div>
           {erro && (
             <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg text-center">
-              Senha incorreta.
+              {erro}
             </p>
           )}
           <button
             type="submit"
-            className="w-full py-3 bg-primary text-white rounded-xl font-semibold shadow"
+            disabled={carregando}
+            className="w-full py-3 bg-primary text-white rounded-xl font-semibold shadow disabled:opacity-70"
           >
-            Entrar
+            {carregando ? 'Entrando...' : 'Entrar'}
           </button>
         </form>
       </div>
@@ -166,34 +177,72 @@ function LoginAdmin({ onEntrar }) {
 
 export default function Admin() {
   const navigate = useNavigate();
-  const { config, setConfig, produtos, salvarProduto, excluirProduto, alternarAtivo } = useApp();
-  const [autenticado, setAutenticado] = useState(() =>
-    sessionStorage.getItem('cardapio_admin_auth') === '1'
-  );
+  const {
+    config,
+    produtos,
+    salvarProduto,
+    excluirProduto,
+    alternarAtivo,
+    usuario,
+    logoutAdmin,
+    salvarConfiguracoes,
+  } = useApp();
   const [editando, setEditando] = useState(null);
   const [aba, setAba] = useState('produtos');
   const [configLocal, setConfigLocal] = useState(config);
+  const [salvandoConfig, setSalvandoConfig] = useState(false);
 
   const cardapioUrl = typeof window !== 'undefined'
-    ? `${window.location.origin}/cardapio`
-    : '/cardapio';
+    ? `${window.location.origin}/#/${config.slug || ''}/cardapio`
+    : '/#/cardapio';
 
-  if (!autenticado) {
+  if (!usuario) {
     return (
       <LoginAdmin
         onEntrar={() => {
           sessionStorage.setItem('cardapio_admin_auth', '1');
-          setAutenticado(true);
         }}
       />
     );
   }
 
-  const salvarConfig = (e) => {
+  async function handleSalvarProduto(produto) {
+    try {
+      await salvarProduto(produto);
+      setEditando(null);
+    } catch (err) {
+      alert('Erro ao salvar produto: ' + (err.message || 'Erro desconhecido'));
+    }
+  }
+
+  async function handleExcluir(id) {
+    if (!confirm('Excluir este produto?')) return;
+    try {
+      await excluirProduto(id);
+    } catch (err) {
+      alert('Erro ao excluir produto: ' + (err.message || 'Erro desconhecido'));
+    }
+  }
+
+  async function handleAlternar(id) {
+    try {
+      await alternarAtivo(id);
+    } catch (err) {
+      alert('Erro ao alterar produto: ' + (err.message || 'Erro desconhecido'));
+    }
+  }
+
+  async function salvarConfig(e) {
     e.preventDefault();
-    setConfig(configLocal);
-    alert('Configurações salvas!');
-  };
+    setSalvandoConfig(true);
+    try {
+      await salvarConfiguracoes(configLocal);
+      alert('Configurações salvas!');
+    } catch (err) {
+      alert('Erro ao salvar configurações: ' + (err.message || 'Erro desconhecido'));
+    }
+    setSalvandoConfig(false);
+  }
 
   return (
     <div className="min-h-[100svh] bg-bg pb-8">
@@ -203,6 +252,16 @@ export default function Admin() {
             <ArrowLeft size={22} />
           </button>
           <h1 className="text-lg font-bold">Painel Admin</h1>
+          <button
+            onClick={async () => {
+              await logoutAdmin();
+              navigate('/');
+            }}
+            className="ml-auto p-2 hover:bg-white/10 rounded-full"
+            title="Sair"
+          >
+            <LogOut size={20} />
+          </button>
         </div>
       </header>
 
@@ -236,10 +295,7 @@ export default function Admin() {
 
             {editando === 'novo' && (
               <ProdutoForm
-                onSalvar={(p) => {
-                  salvarProduto(p);
-                  setEditando(null);
-                }}
+                onSalvar={handleSalvarProduto}
                 onCancelar={() => setEditando(null)}
               />
             )}
@@ -264,7 +320,7 @@ export default function Admin() {
                   </div>
                   <div className="flex flex-col items-end justify-between">
                     <button
-                      onClick={() => alternarAtivo(p.id)}
+                      onClick={() => handleAlternar(p.id)}
                       className={`p-1.5 rounded-full ${p.ativo ? 'text-green-600 bg-green-50' : 'text-red-600 bg-red-50'}`}
                       title={p.ativo ? 'Desativar' : 'Ativar'}
                     >
@@ -278,9 +334,7 @@ export default function Admin() {
                         Editar
                       </button>
                       <button
-                        onClick={() => {
-                          if (confirm('Excluir este produto?')) excluirProduto(p.id);
-                        }}
+                        onClick={() => handleExcluir(p.id)}
                         className="p-1.5 text-red-600 hover:bg-red-50 rounded-full"
                       >
                         <Trash2 size={16} />
@@ -292,10 +346,7 @@ export default function Admin() {
               {editando && typeof editando === 'object' && (
                 <ProdutoForm
                   produtoInicial={editando}
-                  onSalvar={(p) => {
-                    salvarProduto(p);
-                    setEditando(null);
-                  }}
+                  onSalvar={handleSalvarProduto}
                   onCancelar={() => setEditando(null)}
                 />
               )}
@@ -322,30 +373,12 @@ export default function Admin() {
                 className="w-full mt-1 px-3 py-2 bg-bg border border-border rounded-lg text-sm"
               />
             </div>
-            <div>
-              <label className="text-sm font-semibold text-dark">Endereço</label>
-              <input
-                value={configLocal.endereco}
-                onChange={(e) => setConfigLocal({ ...configLocal, endereco: e.target.value })}
-                className="w-full mt-1 px-3 py-2 bg-bg border border-border rounded-lg text-sm"
-              />
-            </div>
-            <div>
-              <label className="text-sm font-semibold text-dark">Logo (URL)</label>
-              <input
-                value={configLocal.logo}
-                onChange={(e) => setConfigLocal({ ...configLocal, logo: e.target.value })}
-                className="w-full mt-1 px-3 py-2 bg-bg border border-border rounded-lg text-sm"
-              />
-              {configLocal.logo && (
-                <img src={configLocal.logo} alt="Logo" className="mt-2 h-16 w-16 object-cover rounded-full" />
-              )}
-            </div>
             <button
               type="submit"
-              className="w-full py-3 bg-primary text-white rounded-xl font-semibold flex items-center justify-center gap-2"
+              disabled={salvandoConfig}
+              className="w-full py-3 bg-primary text-white rounded-xl font-semibold flex items-center justify-center gap-2 disabled:opacity-70"
             >
-              <Store size={18} /> Salvar configurações
+              <Store size={18} /> {salvandoConfig ? 'Salvando...' : 'Salvar configurações'}
             </button>
           </form>
         )}
