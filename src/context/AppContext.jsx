@@ -279,13 +279,13 @@ export function AppProvider({ children }) {
 
   // ========== Funções Super Admin e lojista ==========
 
-  const listarRestaurantes = useCallback(async () => {
+  async function listarRestaurantesFn() {
     const { data, error } = await supabase.from('restaurantes').select('*').order('nome_comercial');
     if (error) throw error;
     return data || [];
-  }, []);
+  }
 
-  const criarRestaurante = useCallback(async ({ slug, nome_comercial, whatsapp_contato }) => {
+  async function criarRestaurante({ slug, nome_comercial, whatsapp_contato }) {
     const { error } = await supabase.from('restaurantes').insert({
       slug,
       nome_comercial,
@@ -293,11 +293,11 @@ export function AppProvider({ children }) {
       status: 'ativo',
     });
     if (error) throw error;
-    const data = await listarRestaurantes();
+    const data = await listarRestaurantesFn();
     setRestaurantes(data);
-  }, [listarRestaurantes, setRestaurantes]);
+  }
 
-  const criarUsuarioLojista = useCallback(async ({ email, senha, restaurante_id, nome }) => {
+  async function criarUsuarioLojista({ email, senha, restaurante_id, nome }) {
     const { error } = await supabase.rpc('criar_usuario_lojista', {
       p_email: email,
       p_senha: senha,
@@ -305,9 +305,9 @@ export function AppProvider({ children }) {
       p_nome: nome,
     });
     if (error) throw error;
-  }, []);
+  }
 
-  const listarPedidos = useCallback(async ({ restauranteId, inicio, fim }) => {
+  async function listarPedidosFn({ restauranteId, inicio, fim }) {
     let q = supabase
       .from('pedidos')
       .select('*')
@@ -320,9 +320,9 @@ export function AppProvider({ children }) {
     const { data, error } = await q;
     if (error) throw error;
     return data || [];
-  }, []);
+  }
 
-  const selecionarRestaurante = useCallback(async (restaurante) => {
+  async function selecionarRestaurante(restaurante) {
     setConfig({
       ...ESTABELECIMENTO,
       id: restaurante.id,
@@ -331,7 +331,7 @@ export function AppProvider({ children }) {
       slug: restaurante.slug,
     });
     await recarregarProdutos(restaurante.id);
-  }, []);
+  }
 
   const isSuperAdmin = perfil?.papel === 'super_admin';
   const isLojista = perfil?.papel === 'lojista';
@@ -455,10 +455,10 @@ export function AppProvider({ children }) {
         excluirProduto,
         alternarAtivo,
         salvarConfiguracoes,
-        listarRestaurantes,
+        listarRestaurantes: listarRestaurantesFn,
         criarRestaurante,
         criarUsuarioLojista,
-        listarPedidos,
+        listarPedidos: listarPedidosFn,
         selecionarRestaurante,
       }}
     >
