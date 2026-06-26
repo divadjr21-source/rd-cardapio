@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ShoppingCart, Store } from 'lucide-react';
 import { useApp } from '../context/useApp';
 import ProdutoCard from '../components/ProdutoCard';
@@ -6,6 +7,7 @@ import { CATEGORIAS } from '../data/constants';
 import { useRestauranteSlug } from '../hooks/useRestauranteSlug';
 
 export default function Cardapio() {
+  const navigate = useNavigate();
   const slug = useRestauranteSlug();
   const { config, produtosAtivos, carrinho, adicionarAoCarrinho, carregando } = useApp();
   const [categoriaAtiva, setCategoriaAtiva] = useState('todas');
