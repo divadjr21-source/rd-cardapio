@@ -6,7 +6,8 @@ import { AppContext } from './AppContext.js';
 
 export function AppProvider({ children }) {
   const location = useLocation();
-  const restauranteSlug = location.pathname.split('/')[1] || null;
+  const hashPath = location.hash.replace(/^#/, '') || location.pathname;
+  const restauranteSlug = hashPath.split('/').filter(Boolean)[0] || null;
   const [config, setConfig] = useState(ESTABELECIMENTO);
   const [produtos, setProdutos] = useState([]);
   const [carregando, setCarregando] = useState(true);
@@ -297,27 +298,86 @@ export function AppProvider({ children }) {
     setRestaurantes(data);
   }
 
-  async function criarUsuarioLojista({ email, senha, restaurante_id, nome }) {
-    const { error } = await supabase.rpc('criar_usuario_lojista', {
-      p_email: email,
-      p_senha: senha,
-      p_restaurante_id: restaurante_id,
-      p_nome: nome,
+  async function excluirRestaurante(id) {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const token = sessionData?.session?.access_token;
+    const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/super-api`;
+
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: token ? `Bearer ${token}` : '',
+      },
+      body: JSON.stringify({
+        acao: 'excluir_loja',
+        restaurante_id: id,
+      }),
     });
-    if (error) throw error;
+
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(body.error || 'Erro ao excluir loja');
+    }
+    const data = await listarRestaurantesFn();
+    setRestaurantes(data);
   }
 
-  async function listarPedidosFn({ restauranteId, inicio, fim }) {
-    let q = supabase
-      .from('pedidos')
-      .select('*')
+  async function criarUsuarioLojista({ email, senha, restaurante_id, nome }) {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const token = sessionData?.session?.access_token;
+    const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/super-api`;
+
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: token ? `Bearer ${token}` : '',
+      },
+      body: JSON.stringify({
+        acao: 'criar_usuario',
+        email,
+        senha,
+        restaurante_id,
+        nome,
+      }),
+    });
+
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(body.error || 'Erro ao criar usuário');
+    }
+  }
+
+  async function excluirUsuario(id) {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const token = sessionData?.session?.access_token;
+    const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/super-api`;
+
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: token ? `Bearer ${token}` : '',
+      },
+      body: JSON.stringify({
+        acao: 'excluir_usuario',
+        user_id: id,
+      }),
+    });
+
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(body.error || 'Erro ao excluir usuário');
+    }
+  }
+
+  async function listarUsuarios() {
+    const { data, error } = await supabase
+      .from('perfis')
+      .select('*, restaurantes:restaurante_id(*)')
+      .neq('papel', 'super_admin')
       .order('created_at', { ascending: false });
-
-    if (restauranteId) q = q.eq('restaurante_id', restauranteId);
-    if (inicio) q = q.gte('created_at', inicio);
-    if (fim) q = q.lte('created_at', fim);
-
-    const { data, error } = await q;
     if (error) throw error;
     return data || [];
   }
@@ -457,7 +517,10 @@ export function AppProvider({ children }) {
         salvarConfiguracoes,
         listarRestaurantes: listarRestaurantesFn,
         criarRestaurante,
+        excluirRestaurante,
         criarUsuarioLojista,
+        excluirUsuario,
+        listarUsuarios,
         listarPedidos: listarPedidosFn,
         selecionarRestaurante,
       }}

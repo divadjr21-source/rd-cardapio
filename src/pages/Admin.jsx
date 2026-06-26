@@ -152,7 +152,10 @@ export default function Admin() {
     salvarConfiguracoes,
     listarRestaurantes,
     criarRestaurante,
+    excluirRestaurante,
     criarUsuarioLojista,
+    excluirUsuario,
+    listarUsuarios,
     listarPedidos,
     selecionarRestaurante,
   } = useApp();
@@ -168,6 +171,14 @@ export default function Admin() {
   const [novoUsuario, setNovoUsuario] = useState({ email: '', senha: '', nome: '', restaurante_id: '' });
   const [salvandoSuper, setSalvandoSuper] = useState(false);
   const [erroTela, setErroTela] = useState('');
+  const [usuarios, setUsuarios] = useState([]);
+
+  useEffect(() => {
+    if (isSuperAdmin && (aba === 'lojas' || aba === 'usuarios')) {
+      listarRestaurantes().then(setRestaurantes);
+      if (aba === 'usuarios') listarUsuarios().then(setUsuarios);
+    }
+  }, [isSuperAdmin, aba, listarRestaurantes, listarUsuarios]);
 
   useEffect(() => {
     setConfigLocal(config);
@@ -286,6 +297,27 @@ export default function Admin() {
       alert('Erro ao criar loja: ' + (err.message || 'Erro desconhecido'));
     } finally {
       setSalvandoSuper(false);
+    }
+  }
+
+  async function handleExcluirRestaurante(id) {
+    if (!confirm('Excluir esta loja permanentemente? Todos os produtos e pedidos vinculados serão perdidos.')) return;
+    try {
+      await excluirRestaurante(id);
+      alert('Loja excluída.');
+    } catch (err) {
+      alert('Erro ao excluir loja: ' + (err.message || 'Erro desconhecido'));
+    }
+  }
+
+  async function handleExcluirUsuario(id) {
+    if (!confirm('Excluir este usuário permanentemente?')) return;
+    try {
+      await excluirUsuario(id);
+      setUsuarios((prev) => prev.filter((u) => u.id !== id));
+      alert('Usuário excluído.');
+    } catch (err) {
+      alert('Erro ao excluir usuário: ' + (err.message || 'Erro desconhecido'));
     }
   }
 

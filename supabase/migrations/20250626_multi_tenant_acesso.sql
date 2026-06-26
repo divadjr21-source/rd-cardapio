@@ -105,17 +105,35 @@ SECURITY DEFINER
 AS $$
 DECLARE
   v_user_id uuid;
+  v_hash text;
 BEGIN
   v_user_id := extensions.uuid_generate_v4();
+  v_hash := crypt(p_senha, gen_salt('bf'));
 
-  INSERT INTO auth.users (id, email, encrypted_password, email_confirmed_at, raw_app_meta_data, raw_user_meta_data)
-  VALUES (
+  INSERT INTO auth.users (
+    id,
+    instance_id,
+    email,
+    encrypted_password,
+    email_confirmed_at,
+    created_at,
+    updated_at,
+    raw_app_meta_data,
+    raw_user_meta_data,
+    is_super_admin,
+    role
+  ) VALUES (
     v_user_id,
+    '00000000-0000-0000-0000-000000000000'::uuid,
     p_email,
-    crypt(p_senha, gen_salt('bf')),
+    v_hash,
+    now(),
+    now(),
     now(),
     '{"provider":"email","providers":["email"]}'::jsonb,
-    jsonb_build_object('nome', p_nome)
+    jsonb_build_object('nome', p_nome),
+    false,
+    'authenticated'
   );
 
   INSERT INTO public.perfis (id, email, restaurante_id, papel, nome)
@@ -149,5 +167,16 @@ BEGIN
     (SELECT raw_user_meta_data->>'nome' FROM auth.users WHERE id = v_user_id)
   )
   ON CONFLICT (id) DO UPDATE SET papel = 'super_admin';
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.excluir_usuario_lojista(p_user_id uuid)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+  DELETE FROM public.perfis WHERE id = p_user_id;
+  DELETE FROM auth.users WHERE id = p_user_id;
 END;
 $$;
