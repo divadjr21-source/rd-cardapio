@@ -65,6 +65,7 @@ export function AppProvider({ children }) {
               id: rData.id,
               nome: rData.nome_comercial || '',
               telefone: rData.whatsapp_contato || '',
+              endereco: rData.endereco || '',
               slug: rData.slug || '',
             });
             await recarregarProdutos(rData.id);
@@ -134,6 +135,7 @@ export function AppProvider({ children }) {
         ...ESTABELECIMENTO,
         nome: restaurante.nome_comercial,
         telefone: restaurante.whatsapp_contato || '',
+        endereco: restaurante.endereco || '',
         slug: restaurante.slug,
         id: restaurante.id,
       });
@@ -273,6 +275,7 @@ export function AppProvider({ children }) {
       .update({
         nome_comercial: novaConfig.nome,
         whatsapp_contato: novaConfig.telefone,
+        endereco: novaConfig.endereco || '',
       })
       .eq('id', restauranteId);
 
@@ -405,6 +408,7 @@ export function AppProvider({ children }) {
       id: restaurante.id,
       nome: restaurante.nome_comercial,
       telefone: restaurante.whatsapp_contato || '',
+      endereco: restaurante.endereco || '',
       slug: restaurante.slug,
     });
     await recarregarProdutos(restaurante.id);

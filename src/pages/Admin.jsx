@@ -536,6 +536,15 @@ export default function Admin() {
                 className="w-full mt-1 px-3 py-2 bg-bg border border-border rounded-lg text-sm"
               />
             </div>
+            <div>
+              <label className="text-sm font-semibold text-dark">Endereço</label>
+              <textarea
+                value={configLocal.endereco || ''}
+                onChange={(e) => setConfigLocal({ ...configLocal, endereco: e.target.value })}
+                placeholder="Rua, número, bairro, cidade"
+                className="w-full mt-1 px-3 py-2 bg-bg border border-border rounded-lg text-sm min-h-[60px]"
+              />
+            </div>
             <button
               type="submit"
               disabled={salvandoConfig}
