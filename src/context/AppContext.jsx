@@ -533,7 +533,7 @@ export function AppProvider({ children }) {
 
     const texto = encodeURIComponent(formatarMensagemWhatsApp(cliente, pedidoId, localizacao));
     const numeroLimpo = telefoneRestaurante.replace(/\D/g, '');
-    const url = `https://api.whatsapp.com/send?phone=${numeroLimpo}&text=${texto}`;
+    const url = `https://wa.me/${numeroLimpo}?text=${texto}`;
     window.open(url, '_blank');
     limparCarrinho();
   }
