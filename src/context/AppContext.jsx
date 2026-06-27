@@ -66,6 +66,7 @@ export function AppProvider({ children }) {
               nome: rData.nome_comercial || '',
               telefone: rData.whatsapp_contato || '',
               endereco: rData.endereco || '',
+              logo: rData.logo || ESTABELECIMENTO.logo,
               slug: rData.slug || '',
             });
             await recarregarProdutos(rData.id);
@@ -136,6 +137,7 @@ export function AppProvider({ children }) {
         nome: restaurante.nome_comercial,
         telefone: restaurante.whatsapp_contato || '',
         endereco: restaurante.endereco || '',
+        logo: restaurante.logo || ESTABELECIMENTO.logo,
         slug: restaurante.slug,
         id: restaurante.id,
       });
@@ -276,6 +278,7 @@ export function AppProvider({ children }) {
         nome_comercial: novaConfig.nome,
         whatsapp_contato: novaConfig.telefone,
         endereco: novaConfig.endereco || '',
+        logo: novaConfig.logo || '',
       })
       .eq('id', restauranteId);
 
@@ -409,6 +412,7 @@ export function AppProvider({ children }) {
       nome: restaurante.nome_comercial,
       telefone: restaurante.whatsapp_contato || '',
       endereco: restaurante.endereco || '',
+      logo: restaurante.logo || ESTABELECIMENTO.logo,
       slug: restaurante.slug,
     });
     await recarregarProdutos(restaurante.id);

@@ -180,3 +180,9 @@ BEGIN
   DELETE FROM auth.users WHERE id = p_user_id;
 END;
 $$;
+
+-- Adiciona coluna de endereco na tabela restaurantes
+ALTER TABLE public.restaurantes ADD COLUMN IF NOT EXISTS endereco text;
+
+-- Adiciona coluna de logo/imagem na tabela restaurantes
+ALTER TABLE public.restaurantes ADD COLUMN IF NOT EXISTS logo text;

@@ -545,6 +545,23 @@ export default function Admin() {
                 className="w-full mt-1 px-3 py-2 bg-bg border border-border rounded-lg text-sm min-h-[60px]"
               />
             </div>
+            <div>
+              <label className="text-sm font-semibold text-dark">Imagem/logo (URL da imagem)</label>
+              <input
+                type="text"
+                value={configLocal.logo || ''}
+                onChange={(e) => setConfigLocal({ ...configLocal, logo: e.target.value })}
+                placeholder="https://..."
+                className="w-full mt-1 px-3 py-2 bg-bg border border-border rounded-lg text-sm"
+              />
+              {configLocal.logo && (
+                <img
+                  src={configLocal.logo}
+                  alt="Pré-visualização da logo"
+                  className="mt-2 h-24 w-24 object-cover rounded-full border-2 border-primary mx-auto"
+                />
+              )}
+            </div>
             <button
               type="submit"
               disabled={salvandoConfig}
