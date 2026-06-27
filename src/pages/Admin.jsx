@@ -194,9 +194,6 @@ export default function Admin() {
       return () => clearTimeout(t);
     }
     setErroTela('');
-    if (isLojista && aba !== 'relatorios') {
-      setAba('relatorios');
-    }
   }, [usuario, perfil, isLojista, aba]);
 
   useEffect(() => {
