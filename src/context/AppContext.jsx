@@ -19,14 +19,25 @@ export function AppProvider({ children }) {
   const [verificandoSessao, setVerificandoSessao] = useState(true);
   const [restaurantes, setRestaurantes] = useState([]);
 
+  const restauranteIdAtual = config.id;
+
+  const chaveCarrinho = restauranteIdAtual
+    ? `cardapio_carrinho_${restauranteIdAtual}`
+    : 'cardapio_carrinho';
+
   const [carrinho, setCarrinho] = useState(() => {
-    const saved = localStorage.getItem('cardapio_carrinho');
+    const saved = localStorage.getItem(chaveCarrinho);
     return saved ? JSON.parse(saved) : [];
   });
 
   const [observacoes, setObservacoes] = useState('');
 
-  useEffect(() => localStorage.setItem('cardapio_carrinho', JSON.stringify(carrinho)), [carrinho]);
+  useEffect(() => {
+    const saved = localStorage.getItem(chaveCarrinho);
+    setCarrinho(saved ? JSON.parse(saved) : []);
+  }, [chaveCarrinho]);
+
+  useEffect(() => localStorage.setItem(chaveCarrinho, JSON.stringify(carrinho)), [carrinho, chaveCarrinho]);
 
   useEffect(() => {
     let ignorar = false;
@@ -523,17 +534,25 @@ export function AppProvider({ children }) {
 
     let telefoneRestaurante = config.telefone;
     if (!telefoneRestaurante) {
-      const { data: restaurante } = await supabase
+      const { data: restaurante, error: telError } = await supabase
         .from('restaurantes')
         .select('whatsapp_contato')
         .eq('id', restauranteId)
         .single();
+
+      if (telError) {
+        console.error('Erro ao buscar telefone do restaurante:', telError);
+      }
       telefoneRestaurante = restaurante?.whatsapp_contato || '';
     }
 
-    const texto = encodeURIComponent(formatarMensagemWhatsApp(cliente, pedidoId, localizacao));
     const numeroLimpo = telefoneRestaurante.replace(/\D/g, '');
-    const url = `https://wa.me/${numeroLimpo}?text=${texto}`;
+    if (!numeroLimpo) {
+      throw new Error('Telefone do restaurante não encontrado.');
+    }
+
+    const texto = encodeURIComponent(formatarMensagemWhatsApp(cliente, pedidoId, localizacao));
+    const url = `https://api.whatsapp.com/send?phone=${numeroLimpo}&text=${texto}`;
     window.open(url, '_blank');
     limparCarrinho();
   }

@@ -27,14 +27,19 @@ export default function Checkout() {
     );
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!cliente.nome.trim() || !cliente.telefone.trim()) {
       setErro('Preencha seu nome e telefone.');
       return;
     }
-    enviarPedido(cliente, localizacao);
-    navigate(`/${slug}/obrigado`);
+    setErro('');
+    try {
+      await enviarPedido(cliente, localizacao);
+      navigate(`/${slug}/obrigado`);
+    } catch (err) {
+      setErro(err.message || 'Erro ao enviar pedido. Tente novamente.');
+    }
   };
 
   const capturarLocalizacao = () => {
