@@ -41,7 +41,7 @@ export default function Home() {
 
         <div>
           <p className="text-sm uppercase tracking-widest text-red-300 mb-2">Bem-vindo ao</p>
-          <h1 className="text-3xl font-bold">{config.nome}</h1>
+          <h1 className="text-3xl font-bold">{config.nome || '...'}</h1>
           {config.endereco && (
             <p className="mt-2 text-sm text-gray-300">{config.endereco}</p>
           )}

@@ -1,8 +1,8 @@
 export const ESTABELECIMENTO = {
-  nome: 'Burguer do Chef',
-  telefone: '5511999999999',
-  logo: 'https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=200&q=80',
-  endereco: 'Rua das Delícias, 123 - Centro',
+  nome: '',
+  telefone: '',
+  logo: '',
+  endereco: '',
   corPrimaria: '#dc2626',
   corEscura: '#111111',
 };
