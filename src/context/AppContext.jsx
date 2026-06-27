@@ -456,25 +456,31 @@ export function AppProvider({ children }) {
 
   const total = carrinho.reduce((acc, item) => acc + item.preco * item.quantidade, 0);
 
-  function formatarMensagem(cliente, localizacao) {
+  function formatarMensagemWhatsApp(cliente, pedidoId, localizacao) {
+    const numeroPedido = pedidoId?.slice(0, 5).toUpperCase() || '----';
     const linhas = carrinho.map(
-      (item) => `* ${item.quantidade}x ${item.nome} - R$ ${(item.preco * item.quantidade).toFixed(2).replace('.', ',')}`
+      (item) => `▫️ ${item.quantidade}x ${item.nome} — R$ ${(item.preco * item.quantidade).toFixed(2).replace('.', ',')}`
     );
-    const obs = observacoes.trim();
     const endereco = cliente.endereco?.trim();
     const mapLink = localizacao
-      ? `Localização: https://www.google.com/maps?q=${localizacao.lat},${localizacao.lng}`
+      ? `📍 Localização: https://www.google.com/maps?q=${localizacao.lat},${localizacao.lng}`
       : '';
+
     const partes = [
-      'Olá, gostaria de fazer um pedido:',
-      `Nome: ${cliente.nome}`,
-      `Telefone: ${cliente.telefone}`,
-      endereco ? `Endereço: ${endereco}` : '',
-      mapLink,
-      'Pedido:',
+      '🛎️ *Novo Pedido recebido!*',
+      '',
+      `*Número:* #${numeroPedido}`,
+      '',
+      '*Itens do pedido:*',
       ...linhas,
-      `Total: R$ ${total.toFixed(2).replace('.', ',')}`,
-      obs ? `Observação: ${obs}` : '',
+      '',
+      `*Total:* R$ ${total.toFixed(2).replace('.', ',')}`,
+      '',
+      '*Dados de entrega:*',
+      `*Nome:* ${cliente.nome}`,
+      `*Telefone:* ${cliente.telefone}`,
+      endereco ? `*Endereço:* ${endereco}` : '',
+      mapLink,
     ];
     return partes.filter(Boolean).join('\n');
   }
@@ -482,13 +488,19 @@ export function AppProvider({ children }) {
   async function enviarPedido(cliente, localizacao) {
     const restauranteId = config.id || perfil?.restaurante_id;
 
-    if (restauranteId) {
-      try {
-        const mapLink = localizacao
-          ? `https://www.google.com/maps?q=${localizacao.lat},${localizacao.lng}`
-          : null;
+    if (!restauranteId) {
+      throw new Error('Restaurante não identificado.');
+    }
 
-        await supabase.from('pedidos').insert({
+    const mapLink = localizacao
+      ? `https://www.google.com/maps?q=${localizacao.lat},${localizacao.lng}`
+      : null;
+
+    let pedidoId;
+    try {
+      const { data: pedido, error } = await supabase
+        .from('pedidos')
+        .insert({
           restaurante_id: restauranteId,
           cliente_nome: cliente.nome,
           cliente_telefone: cliente.telefone,
@@ -498,14 +510,30 @@ export function AppProvider({ children }) {
           observacao: observacoes || '',
           itens: JSON.stringify(carrinho),
           status: 'recebido',
-        });
-      } catch (err) {
-        console.error('Erro ao registrar pedido:', err);
-      }
+        })
+        .select('id')
+        .single();
+
+      if (error) throw error;
+      pedidoId = pedido?.id;
+    } catch (err) {
+      console.error('Erro ao registrar pedido:', err);
+      throw err;
     }
 
-    const texto = encodeURIComponent(formatarMensagem(cliente, localizacao));
-    const url = `https://wa.me/${config.telefone.replace(/\D/g, '')}?text=${texto}`;
+    let telefoneRestaurante = config.telefone;
+    if (!telefoneRestaurante) {
+      const { data: restaurante } = await supabase
+        .from('restaurantes')
+        .select('whatsapp_contato')
+        .eq('id', restauranteId)
+        .single();
+      telefoneRestaurante = restaurante?.whatsapp_contato || '';
+    }
+
+    const texto = encodeURIComponent(formatarMensagemWhatsApp(cliente, pedidoId, localizacao));
+    const numeroLimpo = telefoneRestaurante.replace(/\D/g, '');
+    const url = `https://api.whatsapp.com/send?phone=${numeroLimpo}&text=${texto}`;
     window.open(url, '_blank');
     limparCarrinho();
   }
