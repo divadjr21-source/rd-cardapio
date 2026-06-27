@@ -342,11 +342,9 @@ export default function Admin() {
 
   const abas = [
     { id: 'relatorios', label: 'Vendas', icon: BarChart3 },
-    ...(isLojista ? [] : [
-      { id: 'produtos', label: 'Produtos', icon: Utensils },
-      { id: 'config', label: 'Loja', icon: Store },
-      { id: 'qrcode', label: 'QR Code', icon: QrCode },
-    ]),
+    { id: 'produtos', label: 'Produtos', icon: Utensils },
+    { id: 'config', label: 'Loja', icon: Store },
+    { id: 'qrcode', label: 'QR Code', icon: QrCode },
     ...(isSuperAdmin ? [
       { id: 'lojas', label: 'Lojas', icon: Home },
       { id: 'usuarios', label: 'Usuários', icon: Users },
@@ -452,7 +450,7 @@ export default function Admin() {
           </div>
         )}
 
-        {aba === 'produtos' && !isLojista && (
+        {aba === 'produtos' && (
           <div className="mt-4">
             <button
               onClick={() => setEditando('novo')}
@@ -522,7 +520,7 @@ export default function Admin() {
           </div>
         )}
 
-        {aba === 'config' && !isLojista && (
+        {aba === 'config' && (
           <form onSubmit={salvarConfig} className="mt-4 bg-white rounded-2xl p-4 border border-border space-y-4">
             <div>
               <label className="text-sm font-semibold text-dark">Nome do estabelecimento</label>
@@ -551,7 +549,7 @@ export default function Admin() {
           </form>
         )}
 
-        {aba === 'qrcode' && !isLojista && (
+        {aba === 'qrcode' && (
           <div className="mt-6 bg-white rounded-2xl p-6 border border-border text-center">
             <QrCode size={32} className="mx-auto text-primary mb-3" />
             <h2 className="font-bold text-dark mb-1">QR Code do cardápio</h2>
