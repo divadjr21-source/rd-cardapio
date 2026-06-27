@@ -34,10 +34,12 @@ export default function Checkout() {
       return;
     }
     setErro('');
-    try {
-      await enviarPedido(cliente, localizacao);
-      navigate(`/${slug}/obrigado`);
-    } catch (err) {
+    // CÓDIGO CORRIGIDO (SUBSTITUA POR ESTE):
+try {
+  // Passando as observações junto com os dados que vão para a tabela 'pedidos'
+  await enviarPedido({ ...cliente, observacoes }, localizacao);
+  navigate(`/${slug}/obrigado`);
+} catch (err) {
       setErro(err.message || 'Erro ao enviar pedido. Tente novamente.');
     }
   };
