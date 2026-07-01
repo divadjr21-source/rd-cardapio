@@ -23,21 +23,32 @@ export function AppProvider({ children }) {
 
   const chaveCarrinho = restauranteIdAtual
     ? `cardapio_carrinho_${restauranteIdAtual}`
-    : 'cardapio_carrinho';
+    : null;
 
-  const [carrinho, setCarrinho] = useState(() => {
-    const saved = localStorage.getItem(chaveCarrinho);
-    return saved ? JSON.parse(saved) : [];
-  });
-
+  const [carrinho, setCarrinho] = useState([]);
   const [observacoes, setObservacoes] = useState('');
 
   useEffect(() => {
-    const saved = localStorage.getItem(chaveCarrinho);
-    setCarrinho(saved ? JSON.parse(saved) : []);
+    if (!chaveCarrinho) {
+      setCarrinho([]);
+      return;
+    }
+    try {
+      const saved = localStorage.getItem(chaveCarrinho);
+      setCarrinho(saved ? JSON.parse(saved) : []);
+    } catch {
+      setCarrinho([]);
+    }
   }, [chaveCarrinho]);
 
-  useEffect(() => localStorage.setItem(chaveCarrinho, JSON.stringify(carrinho)), [carrinho, chaveCarrinho]);
+  useEffect(() => {
+    if (!chaveCarrinho) return;
+    try {
+      localStorage.setItem(chaveCarrinho, JSON.stringify(carrinho));
+    } catch (err) {
+      console.error('Erro ao salvar carrinho:', err);
+    }
+  }, [carrinho, chaveCarrinho]);
 
   useEffect(() => {
     let ignorar = false;

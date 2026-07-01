@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Minus, Plus, Trash2, Send, ShoppingBag } from 'lucide-react';
+import { ArrowLeft, Minus, Plus, Trash2, Send, ShoppingBag, Loader2 } from 'lucide-react';
 import { useApp } from '../context/useApp';
 import { useRestauranteSlug } from '../hooks/useRestauranteSlug';
 
@@ -7,6 +7,7 @@ export default function Carrinho() {
   const navigate = useNavigate();
   const slug = useRestauranteSlug();
   const {
+    config,
     carrinho,
     total,
     observacoes,
@@ -14,6 +15,17 @@ export default function Carrinho() {
     atualizarQuantidade,
     removerDoCarrinho,
   } = useApp();
+
+  const restaurantePronto = Boolean(config?.id);
+
+  if (!restaurantePronto) {
+    return (
+      <div className="min-h-[100svh] bg-bg flex flex-col items-center justify-center px-6 text-center">
+        <Loader2 className="animate-spin text-primary mb-4" size={32} />
+        <p className="text-muted text-sm">Carregando dados da loja...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-[100svh] bg-bg pb-40">
