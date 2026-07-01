@@ -484,6 +484,7 @@ export function AppProvider({ children }) {
       (item) => `▫️ ${item.quantidade}x ${item.nome} — R$ ${(item.preco * item.quantidade).toFixed(2).replace('.', ',')}`
     );
     const endereco = cliente.endereco?.trim();
+    const obs = observacoes?.trim();
     const mapLink = localizacao
       ? `📍 Localização: https://www.google.com/maps?q=${localizacao.lat},${localizacao.lng}`
       : '';
@@ -503,6 +504,8 @@ export function AppProvider({ children }) {
       `*Telefone:* ${cliente.telefone}`,
       endereco ? `*Endereço:* ${endereco}` : '',
       mapLink,
+      '',
+      obs ? `*Observações:* ${obs}` : '',
     ];
     return partes.filter(Boolean).join('\n');
   }
