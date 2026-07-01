@@ -64,6 +64,12 @@ CREATE POLICY "perfis_select" ON public.perfis
   FOR SELECT TO authenticated
   USING (auth.uid() = id);
 
+DROP POLICY IF EXISTS "perfis_update_super" ON public.perfis;
+CREATE POLICY "perfis_update_super" ON public.perfis
+  FOR UPDATE TO authenticated
+  USING (auth.uid() IN (SELECT id FROM public.perfis WHERE papel = 'super_admin'))
+  WITH CHECK (auth.uid() IN (SELECT id FROM public.perfis WHERE papel = 'super_admin'));
+
 DROP POLICY IF EXISTS "perfis_insert_super" ON public.perfis;
 CREATE POLICY "perfis_insert_super" ON public.perfis
   FOR INSERT TO authenticated
@@ -186,3 +192,9 @@ ALTER TABLE public.restaurantes ADD COLUMN IF NOT EXISTS endereco text;
 
 -- Adiciona coluna de logo/imagem na tabela restaurantes
 ALTER TABLE public.restaurantes ADD COLUMN IF NOT EXISTS logo text;
+
+-- Garante colunas status/atualizado em restaurantes
+ALTER TABLE public.restaurantes ADD COLUMN IF NOT EXISTS status text DEFAULT 'ativo' CHECK (status IN ('ativo','inativo'));
+
+-- Atualiza todas as lojas existentes para ativo (migracao segura)
+UPDATE public.restaurantes SET status = 'ativo' WHERE status IS NULL;

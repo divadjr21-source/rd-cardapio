@@ -236,8 +236,39 @@ export function AppProvider({ children }) {
   }
 
   async function loginAdmin(email, senha) {
-    const { error } = await supabase.auth.signInWithPassword({ email, password: senha });
-    return { sucesso: !error, error };
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password: senha });
+    if (error) return { sucesso: false, error };
+    if (!data.user) return { sucesso: false, error: { message: 'Usuário não encontrado.' } };
+
+    const { data: perfilData, error: perfilError } = await supabase
+      .from('perfis')
+      .select('*')
+      .eq('id', data.user.id)
+      .single();
+
+    if (perfilError || !perfilData) {
+      await supabase.auth.signOut();
+      return { sucesso: false, error: { message: 'Perfil não encontrado.' } };
+    }
+
+    if (perfilData.ativo === false) {
+      await supabase.auth.signOut();
+      return { sucesso: false, error: { message: 'Usuário desativado. Entre em contato com o suporte.' } };
+    }
+
+    if (perfilData.papel === 'lojista' && perfilData.restaurante_id) {
+      const { data: restaurante } = await supabase
+        .from('restaurantes')
+        .select('status')
+        .eq('id', perfilData.restaurante_id)
+        .single();
+      if (restaurante?.status === 'inativo') {
+        await supabase.auth.signOut();
+        return { sucesso: false, error: { message: 'Loja temporariamente inativa.' } };
+      }
+    }
+
+    return { sucesso: true };
   }
 
   async function logoutAdmin() {
@@ -328,6 +359,13 @@ export function AppProvider({ children }) {
     setRestaurantes(data);
   }
 
+  async function atualizarStatusRestaurante(id, status) {
+    const { error } = await supabase.from('restaurantes').update({ status }).eq('id', id);
+    if (error) throw error;
+    const data = await listarRestaurantesFn();
+    setRestaurantes(data);
+  }
+
   async function excluirRestaurante(id) {
     const { data: sessionData } = await supabase.auth.getSession();
     const token = sessionData?.session?.access_token;
@@ -402,10 +440,15 @@ export function AppProvider({ children }) {
     }
   }
 
+  async function atualizarStatusUsuario(id, ativo) {
+    const { error } = await supabase.from('perfis').update({ ativo }).eq('id', id);
+    if (error) throw error;
+  }
+
   async function listarUsuarios() {
     const { data, error } = await supabase
       .from('perfis')
-      .select('*, restaurantes:restaurante_id(*)')
+      .select('*, restaurantes!inner(nome_comercial)')
       .neq('papel', 'super_admin')
       .order('created_at', { ascending: false });
     if (error) throw error;
@@ -603,9 +646,11 @@ export function AppProvider({ children }) {
         salvarConfiguracoes,
         listarRestaurantes: listarRestaurantesFn,
         criarRestaurante,
+        atualizarStatusRestaurante,
         excluirRestaurante,
         criarUsuarioLojista,
         excluirUsuario,
+        atualizarStatusUsuario,
         listarUsuarios,
         listarPedidos: listarPedidosFn,
         selecionarRestaurante,

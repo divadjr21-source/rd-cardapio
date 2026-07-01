@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useApp } from '../context/useApp';
-import { CATEGORIAS } from '../data/constants';
+import { CATEGORIAS, ESTABELECIMENTO } from '../data/constants';
 import { QRCodeCanvas } from 'qrcode.react';
 import {
   Plus,
   Save,
   Trash2,
   Power,
+  PowerOff,
   QrCode,
   Store,
   LogOut,
@@ -152,9 +153,11 @@ export default function Admin() {
     salvarConfiguracoes,
     listarRestaurantes,
     criarRestaurante,
+    atualizarStatusRestaurante,
     excluirRestaurante,
     criarUsuarioLojista,
     excluirUsuario,
+    atualizarStatusUsuario,
     listarUsuarios,
     listarPedidos,
     selecionarRestaurante,
@@ -302,9 +305,22 @@ export default function Admin() {
     if (!confirm('Excluir esta loja permanentemente? Todos os produtos e pedidos vinculados serão perdidos.')) return;
     try {
       await excluirRestaurante(id);
+      if (config?.id === id) setConfigLocal(ESTABELECIMENTO);
       alert('Loja excluída.');
+      const data = await listarRestaurantes();
+      setRestaurantesLista(data);
     } catch (err) {
       alert('Erro ao excluir loja: ' + (err.message || 'Erro desconhecido'));
+    }
+  }
+
+  async function handleAlternarStatusRestaurante(id, ativo) {
+    try {
+      await atualizarStatusRestaurante(id, ativo ? 'ativo' : 'inativo');
+      const data = await listarRestaurantes();
+      setRestaurantesLista(data);
+    } catch (err) {
+      alert('Erro ao alterar status da loja: ' + (err.message || 'Erro desconhecido'));
     }
   }
 
@@ -316,6 +332,16 @@ export default function Admin() {
       alert('Usuário excluído.');
     } catch (err) {
       alert('Erro ao excluir usuário: ' + (err.message || 'Erro desconhecido'));
+    }
+  }
+
+  async function handleAlternarStatusUsuario(id, ativoAtual) {
+    try {
+      await atualizarStatusUsuario(id, !ativoAtual);
+      const data = await listarUsuarios();
+      setUsuarios(data);
+    } catch (err) {
+      alert('Erro ao alterar status do usuário: ' + (err.message || 'Erro desconhecido'));
     }
   }
 
@@ -626,17 +652,44 @@ export default function Admin() {
               ) : (
                 <ul className="divide-y divide-gray-100">
                   {restaurantesLista.map((r) => (
-                    <li key={r.id} className="p-4 flex items-center justify-between">
-                      <div>
+                    <li key={r.id} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div className="flex-1">
                         <p className="font-semibold text-dark text-sm">{r.nome_comercial}</p>
                         <p className="text-xs text-muted">/{r.slug}</p>
+                        <span className={`inline-flex mt-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide ${
+                          r.status === 'ativo' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                        }`}>
+                          {r.status === 'ativo' ? 'Ativo' : 'Inativo'}
+                        </span>
                       </div>
-                      <button
-                        onClick={() => selecionarRestaurante(r)}
-                        className="text-xs text-primary font-semibold"
-                      >
-                        Gerenciar produtos
-                      </button>
+
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleAlternarStatusRestaurante(r.id, r.status !== 'ativo')}
+                          title={r.status === 'ativo' ? 'Desativar loja' : 'Ativar loja'}
+                          className={`flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-semibold transition-colors ${
+                            r.status === 'ativo'
+                              ? 'bg-red-50 text-red-600 hover:bg-red-100'
+                              : 'bg-green-50 text-green-600 hover:bg-green-100'
+                          }`}
+                        >
+                          {r.status === 'ativo' ? <PowerOff size={14} /> : <Power size={14} />}
+                          {r.status === 'ativo' ? 'Desativar' : 'Ativar'}
+                        </button>
+                        <button
+                          onClick={() => selecionarRestaurante(r)}
+                          className="px-3 py-2 text-xs text-primary font-semibold hover:bg-primary/5 rounded-lg"
+                        >
+                          Gerenciar
+                        </button>
+                        <button
+                          onClick={() => handleExcluirRestaurante(r.id)}
+                          title="Excluir loja"
+                          className="p-2 text-red-500 hover:bg-red-50 rounded-lg"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
                     </li>
                   ))}
                 </ul>
@@ -693,6 +746,55 @@ export default function Admin() {
                 {salvandoSuper ? 'Criando...' : 'Criar usuário'}
               </button>
             </form>
+
+            <div className="bg-white rounded-2xl border border-border overflow-hidden">
+              {usuarios.length === 0 ? (
+                <p className="p-6 text-center text-muted text-sm">Nenhum usuário cadastrado.</p>
+              ) : (
+                <ul className="divide-y divide-gray-100">
+                  {usuarios.map((u) => {
+                    const ativo = u.ativo !== false;
+                    const nomeRestaurante = u.restaurantes?.nome_comercial || u.restaurante?.nome_comercial || '—';
+                    return (
+                      <li key={u.id} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div className="flex-1">
+                          <p className="font-semibold text-dark text-sm">{u.nome || 'Sem nome'}</p>
+                          <p className="text-xs text-muted">{u.email}</p>
+                          <p className="text-xs text-primary mt-1">{nomeRestaurante}</p>
+                          <span className={`inline-flex mt-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide ${
+                            ativo ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                          }`}>
+                            {ativo ? 'Ativo' : 'Inativo'}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => handleAlternarStatusUsuario(u.id, ativo)}
+                            title={ativo ? 'Desativar acesso' : 'Ativar acesso'}
+                            className={`flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-semibold transition-colors ${
+                              ativo
+                                ? 'bg-red-50 text-red-600 hover:bg-red-100'
+                                : 'bg-green-50 text-green-600 hover:bg-green-100'
+                            }`}
+                          >
+                            {ativo ? <PowerOff size={14} /> : <Power size={14} />}
+                            {ativo ? 'Desativar' : 'Ativar'}
+                          </button>
+                          <button
+                            onClick={() => handleExcluirUsuario(u.id)}
+                            title="Excluir usuário"
+                            className="p-2 text-red-500 hover:bg-red-50 rounded-lg"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </div>
           </div>
         )}
       </div>
