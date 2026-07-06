@@ -176,6 +176,7 @@ export default function Admin() {
   const [erroTela, setErroTela] = useState('');
   const [usuarios, setUsuarios] = useState([]);
   const [restaurantesLista, setRestaurantesLista] = useState([]);
+  const [lojaSelecionadaId, setLojaSelecionadaId] = useState(null);
 
   useEffect(() => {
     if (isSuperAdmin && (aba === 'lojas' || aba === 'usuarios')) {
@@ -276,14 +277,38 @@ export default function Admin() {
 
   async function salvarConfig(e) {
     e.preventDefault();
+    if (!lojaSelecionadaId) {
+      alert('Loja não selecionada.');
+      return;
+    }
     setSalvandoConfig(true);
     try {
-      await salvarConfiguracoes(configLocal);
+      await salvarConfiguracoes({ ...configLocal, id: lojaSelecionadaId });
       alert('Configurações salvas!');
+      const data = await listarRestaurantes();
+      setRestaurantesLista(data);
+      setConfigLocal(config);
+      setLojaSelecionadaId(null);
     } catch (err) {
       alert('Erro ao salvar configurações: ' + (err.message || 'Erro desconhecido'));
     }
     setSalvandoConfig(false);
+  }
+
+  function abrirEdicaoLoja(r) {
+    setLojaSelecionadaId(r.id);
+    setConfigLocal({
+      ...ESTABELECIMENTO,
+      id: r.id,
+      nome: r.nome_comercial || '',
+      telefone: r.whatsapp_contato || '',
+      endereco: r.endereco || '',
+      logo: r.logo || '',
+      slug: r.slug || '',
+      status: r.status || 'ativo',
+      modulo_delivery: r.modulo_delivery !== false,
+      modulo_mesa: r.modulo_mesa === true,
+    });
   }
 
   function normalizarSlug(valor) {
@@ -378,12 +403,13 @@ export default function Admin() {
   const abas = [
     { id: 'relatorios', label: 'Vendas', icon: BarChart3 },
     { id: 'produtos', label: 'Produtos', icon: Utensils },
-    { id: 'config', label: 'Loja', icon: Store },
     { id: 'qrcode', label: 'QR Code', icon: QrCode },
     ...(isSuperAdmin ? [
       { id: 'lojas', label: 'Lojas', icon: Home },
       { id: 'usuarios', label: 'Usuários', icon: Users },
-    ] : []),
+    ] : [
+      { id: 'config', label: 'Loja', icon: Store },
+    ]),
   ];
 
   return (
@@ -555,53 +581,65 @@ export default function Admin() {
           </div>
         )}
 
-        {aba === 'config' && (
-          <form onSubmit={salvarConfig} className="mt-4 bg-white rounded-2xl p-4 border border-border space-y-4">
-            <div>
-              <label className="text-sm font-semibold text-dark">Nome do estabelecimento</label>
-              <input
-                value={configLocal.nome || ''}
-                onChange={(e) => setConfigLocal({ ...configLocal, nome: e.target.value })}
-                className="w-full mt-1 px-3 py-2 bg-bg border border-border rounded-lg text-sm"
-              />
+        {lojaSelecionadaId && aba === 'lojas' && isSuperAdmin && (
+          <div className="mt-4 bg-white rounded-2xl p-4 border border-border space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="font-bold text-dark">Editar loja</h3>
+              <button
+                onClick={() => {
+                  setLojaSelecionadaId(null);
+                  setConfigLocal(config);
+                }}
+                className="text-sm text-muted hover:text-dark"
+              >
+                Fechar
+              </button>
             </div>
-            <div>
-              <label className="text-sm font-semibold text-dark">WhatsApp (com DDI e DDD)</label>
-              <input
-                value={configLocal.telefone || ''}
-                onChange={(e) => setConfigLocal({ ...configLocal, telefone: e.target.value })}
-                placeholder="5511999999999"
-                className="w-full mt-1 px-3 py-2 bg-bg border border-border rounded-lg text-sm"
-              />
-            </div>
-            <div>
-              <label className="text-sm font-semibold text-dark">Endereço</label>
-              <textarea
-                value={configLocal.endereco || ''}
-                onChange={(e) => setConfigLocal({ ...configLocal, endereco: e.target.value })}
-                placeholder="Rua, número, bairro, cidade"
-                className="w-full mt-1 px-3 py-2 bg-bg border border-border rounded-lg text-sm min-h-[60px]"
-              />
-            </div>
-            <div>
-              <label className="text-sm font-semibold text-dark">Imagem/logo (URL da imagem)</label>
-              <input
-                type="text"
-                value={configLocal.logo || ''}
-                onChange={(e) => setConfigLocal({ ...configLocal, logo: e.target.value })}
-                placeholder="https://..."
-                className="w-full mt-1 px-3 py-2 bg-bg border border-border rounded-lg text-sm"
-              />
-              {configLocal.logo && (
-                <img
-                  src={configLocal.logo}
-                  alt="Pré-visualização da logo"
-                  className="mt-2 h-24 w-24 object-cover rounded-full border-2 border-primary mx-auto"
+            <form onSubmit={salvarConfig} className="space-y-4">
+              <div>
+                <label className="text-sm font-semibold text-dark">Nome do estabelecimento</label>
+                <input
+                  value={configLocal.nome || ''}
+                  onChange={(e) => setConfigLocal({ ...configLocal, nome: e.target.value })}
+                  className="w-full mt-1 px-3 py-2 bg-bg border border-border rounded-lg text-sm"
                 />
-              )}
-            </div>
+              </div>
+              <div>
+                <label className="text-sm font-semibold text-dark">WhatsApp (com DDI e DDD)</label>
+                <input
+                  value={configLocal.telefone || ''}
+                  onChange={(e) => setConfigLocal({ ...configLocal, telefone: e.target.value })}
+                  placeholder="5511999999999"
+                  className="w-full mt-1 px-3 py-2 bg-bg border border-border rounded-lg text-sm"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-semibold text-dark">Endereço</label>
+                <textarea
+                  value={configLocal.endereco || ''}
+                  onChange={(e) => setConfigLocal({ ...configLocal, endereco: e.target.value })}
+                  placeholder="Rua, número, bairro, cidade"
+                  className="w-full mt-1 px-3 py-2 bg-bg border border-border rounded-lg text-sm min-h-[60px]"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-semibold text-dark">Imagem/logo (URL da imagem)</label>
+                <input
+                  type="text"
+                  value={configLocal.logo || ''}
+                  onChange={(e) => setConfigLocal({ ...configLocal, logo: e.target.value })}
+                  placeholder="https://..."
+                  className="w-full mt-1 px-3 py-2 bg-bg border border-border rounded-lg text-sm"
+                />
+                {configLocal.logo && (
+                  <img
+                    src={configLocal.logo}
+                    alt="Pré-visualização da logo"
+                    className="mt-2 h-24 w-24 object-cover rounded-full border-2 border-primary mx-auto"
+                  />
+                )}
+              </div>
 
-            {isSuperAdmin && (
               <div className="border-t border-border pt-4">
                 <p className="text-sm font-semibold text-dark mb-3">Modalidade de atendimento</p>
                 <label className="flex items-center justify-between py-2 cursor-pointer">
@@ -623,16 +661,23 @@ export default function Admin() {
                   />
                 </label>
               </div>
-            )}
 
-            <button
-              type="submit"
-              disabled={salvandoConfig}
-              className="w-full py-3 bg-primary text-white rounded-xl font-semibold flex items-center justify-center gap-2 disabled:opacity-70"
-            >
-              <Store size={18} /> {salvandoConfig ? 'Salvando...' : 'Salvar configurações'}
-            </button>
-          </form>
+              <button
+                type="submit"
+                disabled={salvandoConfig}
+                className="w-full py-3 bg-primary text-white rounded-xl font-semibold flex items-center justify-center gap-2 disabled:opacity-70"
+              >
+                <Store size={18} /> {salvandoConfig ? 'Salvando...' : 'Salvar configurações'}
+              </button>
+            </form>
+          </div>
+        )}
+
+        {/* Loja antiga removida — edição agora é feita na aba Lojas */}
+        {aba === 'config' && isSuperAdmin && (
+          <div className="mt-4 p-6 text-center text-muted bg-white rounded-2xl border border-border">
+            <p className="text-sm">Edição de loja foi movida para a aba <strong>Lojas</strong>.</p>
+          </div>
         )}
 
         {aba === 'qrcode' && (
@@ -714,7 +759,7 @@ export default function Admin() {
                           {r.status === 'ativo' ? 'Desativar' : 'Ativar'}
                         </button>
                         <button
-                          onClick={() => selecionarRestaurante(r)}
+                          onClick={() => abrirEdicaoLoja(r)}
                           className="px-3 py-2 text-xs text-primary font-semibold hover:bg-primary/5 rounded-lg"
                         >
                           Gerenciar

@@ -331,7 +331,7 @@ export function AppProvider({ children }) {
   }
 
   async function salvarConfiguracoes(novaConfig) {
-    const restauranteId = config.id;
+    const restauranteId = novaConfig.id;
     if (!restauranteId) throw new Error('Restaurante não identificado.');
 
     const { error } = await supabase
@@ -347,7 +347,6 @@ export function AppProvider({ children }) {
       .eq('id', restauranteId);
 
     if (error) throw error;
-    setConfig(novaConfig);
   }
 
   // ========== Funções Super Admin e lojista ==========
