@@ -184,9 +184,12 @@ export default function Admin() {
         listarUsuarios()
           .then((data) => {
             console.log('usuarios carregados:', data);
-            setUsuarios(data);
+            setUsuarios(data || []);
           })
-          .catch((err) => console.error('Erro ao listar usuários:', err));
+          .catch((err) => {
+            console.error('Erro ao listar usuários:', err);
+            setUsuarios([]);
+          });
       } else {
         setUsuarios([]);
       }

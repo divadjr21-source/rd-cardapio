@@ -56,13 +56,16 @@ CREATE INDEX IF NOT EXISTS idx_pedidos_created_at ON public.pedidos(created_at);
 ALTER TABLE public.perfis ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.pedidos ENABLE ROW LEVEL SECURITY;
 
--- perfis: cada usuário vê o próprio perfil
+-- perfis: cada usuário vê o próprio perfil; super_admin vê todos
 DROP POLICY IF EXISTS "perfis_select_super" ON public.perfis;
 DROP POLICY IF EXISTS "perfis_select_proprio" ON public.perfis;
 DROP POLICY IF EXISTS "perfis_select" ON public.perfis;
 CREATE POLICY "perfis_select" ON public.perfis
   FOR SELECT TO authenticated
-  USING (auth.uid() = id);
+  USING (
+    auth.uid() = id OR
+    auth.uid() IN (SELECT id FROM public.perfis WHERE papel = 'super_admin')
+  );
 
 DROP POLICY IF EXISTS "perfis_update_super" ON public.perfis;
 CREATE POLICY "perfis_update_super" ON public.perfis
