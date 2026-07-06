@@ -247,6 +247,7 @@ export function AppProvider({ children }) {
       .single();
 
     if (perfilError || !perfilData) {
+      console.error('Perfil não encontrado:', perfilError);
       await supabase.auth.signOut();
       return { sucesso: false, error: { message: 'Perfil não encontrado.' } };
     }
