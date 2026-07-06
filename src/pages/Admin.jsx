@@ -180,7 +180,16 @@ export default function Admin() {
   useEffect(() => {
     if (isSuperAdmin && (aba === 'lojas' || aba === 'usuarios')) {
       listarRestaurantes().then(setRestaurantesLista);
-      if (aba === 'usuarios') listarUsuarios().then(setUsuarios);
+      if (aba === 'usuarios') {
+        listarUsuarios()
+          .then((data) => {
+            console.log('usuarios carregados:', data);
+            setUsuarios(data);
+          })
+          .catch((err) => console.error('Erro ao listar usuários:', err));
+      } else {
+        setUsuarios([]);
+      }
     }
   }, [isSuperAdmin, aba, listarRestaurantes, listarUsuarios]);
 

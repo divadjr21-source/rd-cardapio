@@ -448,7 +448,7 @@ export function AppProvider({ children }) {
   async function listarUsuarios() {
     const { data, error } = await supabase
       .from('perfis')
-      .select('*, restaurantes!inner(nome_comercial)')
+      .select('*, restaurantes(nome_comercial)')
       .neq('papel', 'super_admin')
       .order('created_at', { ascending: false });
     if (error) throw error;
