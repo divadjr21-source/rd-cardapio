@@ -1,17 +1,33 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Send, User, Phone, MapPin, Navigation } from 'lucide-react';
 import { useApp } from '../context/useApp';
 import { useRestauranteSlug } from '../hooks/useRestauranteSlug';
+import { useMesaParam } from '../hooks/useMesaParam';
 
 export default function Checkout() {
   const navigate = useNavigate();
   const slug = useRestauranteSlug();
-  const { carrinho, total, observacoes, enviarPedido } = useApp();
+  const { carrinho, total, observacoes, enviarPedido, config } = useApp();
+  const numeroMesa = useMesaParam();
+
+  const modoMesaAtivo = config?.modulo_mesa === true && numeroMesa;
+
   const [cliente, setCliente] = useState({ nome: '', telefone: '', endereco: '' });
   const [erro, setErro] = useState('');
   const [localizacao, setLocalizacao] = useState(null);
   const [buscandoLocal, setBuscandoLocal] = useState(false);
+
+  // Se modo mesa ativo, preenche mesa automaticamente e limpa endereço
+  useEffect(() => {
+    if (modoMesaAtivo) {
+      setLocalizacao(null);
+      setCliente((prev) => ({
+        ...prev,
+        endereco: '',
+      }));
+    }
+  }, [modoMesaAtivo]);
 
   if (carrinho.length === 0) {
     return (
@@ -33,13 +49,22 @@ export default function Checkout() {
       setErro('Preencha seu nome e telefone.');
       return;
     }
+
+    if (!modoMesaAtivo && config?.modulo_delivery === true && !cliente.endereco?.trim()) {
+      // Opcional: exigir endereço apenas se delivery estiver ativo e for delivery
+      // Descomente a linha abaixo se quiser obrigar endereço:
+      // setErro('Preencha o endereço de entrega.'); return;
+    }
+
     setErro('');
-    // CÓDIGO CORRIGIDO (SUBSTITUA POR ESTE):
-try {
-  // Passando as observações junto com os dados que vão para a tabela 'pedidos'
-  await enviarPedido({ ...cliente, observacoes }, localizacao);
-  navigate(`/${slug}/obrigado`);
-} catch (err) {
+    try {
+      await enviarPedido(
+        { ...cliente, observacoes },
+        localizacao,
+        modoMesaAtivo ? numeroMesa : null
+      );
+      navigate(`/${slug}/obrigado`);
+    } catch (err) {
       setErro(err.message || 'Erro ao enviar pedido. Tente novamente.');
     }
   };
@@ -81,6 +106,13 @@ try {
       </header>
 
       <main className="max-w-md mx-auto px-4 mt-4">
+        {modoMesaAtivo && (
+          <div className="mb-4 bg-primary/10 border border-primary/20 text-primary rounded-2xl p-4 text-center">
+            <p className="text-sm font-semibold">Pedido para a mesa</p>
+            <p className="text-2xl font-bold">{numeroMesa}</p>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="bg-white rounded-2xl p-4 border border-border space-y-4">
             <div>
@@ -109,34 +141,36 @@ try {
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-semibold text-dark mb-1.5">
-                <MapPin size={14} className="inline mr-1" /> Endereço (opcional)
-              </label>
-              <input
-                type="text"
-                value={cliente.endereco}
-                onChange={(e) => setCliente({ ...cliente, endereco: e.target.value })}
-                placeholder="Rua, número, bairro"
-                className="w-full px-4 py-3 bg-bg border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary"
-              />
+            {!modoMesaAtivo && (
+              <div>
+                <label className="block text-sm font-semibold text-dark mb-1.5">
+                  <MapPin size={14} className="inline mr-1" /> Endereço (opcional)
+                </label>
+                <input
+                  type="text"
+                  value={cliente.endereco}
+                  onChange={(e) => setCliente({ ...cliente, endereco: e.target.value })}
+                  placeholder="Rua, número, bairro"
+                  className="w-full px-4 py-3 bg-bg border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary"
+                />
 
-              <button
-                type="button"
-                onClick={capturarLocalizacao}
-                disabled={buscandoLocal}
-                className="mt-2 flex items-center gap-2 text-sm font-semibold text-primary hover:text-primary-dark disabled:text-gray-400"
-              >
-                <Navigation size={16} />
-                {buscandoLocal ? 'Obtendo localização...' : localizacao ? 'Localização capturada' : 'Usar minha localização atual'}
-              </button>
+                <button
+                  type="button"
+                  onClick={capturarLocalizacao}
+                  disabled={buscandoLocal}
+                  className="mt-2 flex items-center gap-2 text-sm font-semibold text-primary hover:text-primary-dark disabled:text-gray-400"
+                >
+                  <Navigation size={16} />
+                  {buscandoLocal ? 'Obtendo localização...' : localizacao ? 'Localização capturada' : 'Usar minha localização atual'}
+                </button>
 
-              {localizacao && (
-                <p className="mt-2 text-xs text-green-600 bg-green-50 px-3 py-2 rounded-lg">
-                  Coordenadas: {localizacao.lat.toFixed(6)}, {localizacao.lng.toFixed(6)}
-                </p>
-              )}
-            </div>
+                {localizacao && (
+                  <p className="mt-2 text-xs text-green-600 bg-green-50 px-3 py-2 rounded-lg">
+                    Coordenadas: {localizacao.lat.toFixed(6)}, {localizacao.lng.toFixed(6)}
+                  </p>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="bg-white rounded-2xl p-4 border border-border">
@@ -175,7 +209,7 @@ try {
             className="w-full py-4 bg-primary hover:bg-primary-dark text-white font-bold rounded-2xl shadow-lg flex items-center justify-center gap-2 transition-transform active:scale-95"
           >
             <Send size={20} />
-            Enviar pedido pelo WhatsApp
+            {modoMesaAtivo ? 'Enviar pedido para a cozinha' : 'Enviar pedido pelo WhatsApp'}
           </button>
         </form>
       </main>

@@ -600,6 +600,31 @@ export default function Admin() {
                 />
               )}
             </div>
+
+            {isSuperAdmin && (
+              <div className="border-t border-border pt-4">
+                <p className="text-sm font-semibold text-dark mb-3">Modalidade de atendimento</p>
+                <label className="flex items-center justify-between py-2 cursor-pointer">
+                  <span className="text-sm text-dark">Delivery</span>
+                  <input
+                    type="checkbox"
+                    checked={configLocal.modulo_delivery !== false}
+                    onChange={(e) => setConfigLocal({ ...configLocal, modulo_delivery: e.target.checked })}
+                    className="w-5 h-5 accent-primary"
+                  />
+                </label>
+                <label className="flex items-center justify-between py-2 cursor-pointer">
+                  <span className="text-sm text-dark">QR Code de Mesa</span>
+                  <input
+                    type="checkbox"
+                    checked={configLocal.modulo_mesa === true}
+                    onChange={(e) => setConfigLocal({ ...configLocal, modulo_mesa: e.target.checked })}
+                    className="w-5 h-5 accent-primary"
+                  />
+                </label>
+              </div>
+            )}
+
             <button
               type="submit"
               disabled={salvandoConfig}

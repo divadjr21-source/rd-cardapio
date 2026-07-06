@@ -199,5 +199,12 @@ ALTER TABLE public.restaurantes ADD COLUMN IF NOT EXISTS logo text;
 -- Garante colunas status/atualizado em restaurantes
 ALTER TABLE public.restaurantes ADD COLUMN IF NOT EXISTS status text DEFAULT 'ativo' CHECK (status IN ('ativo','inativo'));
 
+-- Adiciona colunas de modulos de negocio (controladas apenas pelo super admin)
+ALTER TABLE public.restaurantes ADD COLUMN IF NOT EXISTS modulo_delivery boolean DEFAULT true;
+ALTER TABLE public.restaurantes ADD COLUMN IF NOT EXISTS modulo_mesa boolean DEFAULT false;
+
+-- Adiciona numero da mesa no pedido (nulo quando for delivery)
+ALTER TABLE public.pedidos ADD COLUMN IF NOT EXISTS numero_mesa text;
+
 -- Atualiza todas as lojas existentes para ativo (migracao segura)
 UPDATE public.restaurantes SET status = 'ativo' WHERE status IS NULL;

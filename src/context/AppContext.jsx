@@ -90,6 +90,9 @@ export function AppProvider({ children }) {
               endereco: rData.endereco || '',
               logo: rData.logo || ESTABELECIMENTO.logo,
               slug: rData.slug || '',
+              status: rData.status || 'ativo',
+              modulo_delivery: rData.modulo_delivery !== false,
+              modulo_mesa: rData.modulo_mesa === true,
             });
             await recarregarProdutos(rData.id);
           }
@@ -162,6 +165,9 @@ export function AppProvider({ children }) {
         logo: restaurante.logo || ESTABELECIMENTO.logo,
         slug: restaurante.slug,
         id: restaurante.id,
+        status: restaurante.status || 'ativo',
+        modulo_delivery: restaurante.modulo_delivery !== false,
+        modulo_mesa: restaurante.modulo_mesa === true,
       });
 
       await recarregarProdutos(restaurante.id);
@@ -335,6 +341,8 @@ export function AppProvider({ children }) {
         whatsapp_contato: novaConfig.telefone,
         endereco: novaConfig.endereco || '',
         logo: novaConfig.logo || '',
+        modulo_delivery: novaConfig.modulo_delivery,
+        modulo_mesa: novaConfig.modulo_mesa,
       })
       .eq('id', restauranteId);
 
@@ -446,6 +454,17 @@ export function AppProvider({ children }) {
   async function atualizarStatusUsuario(id, ativo) {
     const { error } = await supabase.from('perfis').update({ ativo }).eq('id', id);
     if (error) throw error;
+
+    const { data: sessaoAtual } = await supabase.auth.getSession();
+    const idAtual = sessaoAtual?.session?.user?.id;
+    if (idAtual && idAtual === id) {
+      const { data: novoPerfil } = await supabase
+        .from('perfis')
+        .select('*')
+        .eq('id', id)
+        .single();
+      if (novoPerfil) setPerfil(novoPerfil);
+    }
   }
 
   async function listarUsuarios() {
@@ -482,6 +501,9 @@ export function AppProvider({ children }) {
       endereco: restaurante.endereco || '',
       logo: restaurante.logo || ESTABELECIMENTO.logo,
       slug: restaurante.slug,
+      status: restaurante.status || 'ativo',
+      modulo_delivery: restaurante.modulo_delivery !== false,
+      modulo_mesa: restaurante.modulo_mesa === true,
     });
     await recarregarProdutos(restaurante.id);
   }
@@ -524,28 +546,29 @@ export function AppProvider({ children }) {
 
   const total = carrinho.reduce((acc, item) => acc + item.preco * item.quantidade, 0);
 
-  function formatarMensagemWhatsApp(cliente, pedidoId, localizacao) {
+  function formatarMensagemWhatsApp(cliente, pedidoId, localizacao, numeroMesa) {
     const numeroPedido = pedidoId?.slice(0, 5).toUpperCase() || '----';
     const linhas = carrinho.map(
       (item) => `▫️ ${item.quantidade}x ${item.nome} — R$ ${(item.preco * item.quantidade).toFixed(2).replace('.', ',')}`
     );
-    const endereco = cliente.endereco?.trim();
+    const endereco = numeroMesa ? null : cliente.endereco?.trim();
     const obs = observacoes?.trim();
-    const mapLink = localizacao
-      ? `📍 Localização: https://www.google.com/maps?q=${localizacao.lat},${localizacao.lng}`
-      : '';
+    const mapLink = numeroMesa || !localizacao
+      ? ''
+      : `📍 Localização: https://www.google.com/maps?q=${localizacao.lat},${localizacao.lng}`;
 
     const partes = [
       '🛎️ *Novo Pedido recebido!*',
       '',
       `*Número:* #${numeroPedido}`,
+      numeroMesa ? `*Mesa:* ${numeroMesa}` : '',
       '',
       '*Itens do pedido:*',
       ...linhas,
       '',
       `*Total:* R$ ${total.toFixed(2).replace('.', ',')}`,
       '',
-      '*Dados de entrega:*',
+      '*Dados do cliente:*',
       `*Nome:* ${cliente.nome}`,
       `*Telefone:* ${cliente.telefone}`,
       endereco ? `*Endereço:* ${endereco}` : '',
@@ -556,7 +579,7 @@ export function AppProvider({ children }) {
     return partes.filter(Boolean).join('\n');
   }
 
-  async function enviarPedido(cliente, localizacao) {
+  async function enviarPedido(cliente, localizacao, numeroMesa) {
     const restauranteId = config.id || perfil?.restaurante_id;
 
     if (!restauranteId) {
@@ -575,8 +598,9 @@ export function AppProvider({ children }) {
           restaurante_id: restauranteId,
           cliente_nome: cliente.nome,
           cliente_telefone: cliente.telefone,
-          cliente_endereco: cliente.endereco || '',
-          localizacao_maps: mapLink,
+          cliente_endereco: numeroMesa ? '' : (cliente.endereco || ''),
+          localizacao_maps: numeroMesa ? null : mapLink,
+          numero_mesa: numeroMesa || null,
           total,
           observacao: observacoes || '',
           itens: JSON.stringify(carrinho),
@@ -611,7 +635,7 @@ export function AppProvider({ children }) {
       throw new Error('Telefone do restaurante não encontrado.');
     }
 
-    const texto = encodeURIComponent(formatarMensagemWhatsApp(cliente, pedidoId, localizacao));
+    const texto = encodeURIComponent(formatarMensagemWhatsApp(cliente, pedidoId, localizacao, numeroMesa));
     const url = `https://api.whatsapp.com/send?phone=${numeroLimpo}&text=${texto}`;
     window.open(url, '_blank');
     limparCarrinho();

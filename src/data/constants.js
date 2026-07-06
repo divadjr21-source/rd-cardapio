@@ -5,6 +5,9 @@ export const ESTABELECIMENTO = {
   endereco: '',
   corPrimaria: '#dc2626',
   corEscura: '#111111',
+  status: 'ativo',
+  modulo_delivery: true,
+  modulo_mesa: false,
 };
 
 export const CATEGORIAS = [
