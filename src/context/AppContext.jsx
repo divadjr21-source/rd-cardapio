@@ -256,6 +256,8 @@ export function AppProvider({ children }) {
       return { sucesso: false, error: { message: 'Usuário desativado. Entre em contato com o suporte.' } };
     }
 
+    setPerfil(perfilData);
+
     if (perfilData.papel === 'lojista' && perfilData.restaurante_id) {
       const { data: restaurante } = await supabase
         .from('restaurantes')
