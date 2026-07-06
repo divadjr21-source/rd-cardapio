@@ -1,15 +1,22 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Store, Eye, EyeOff, Loader2 } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { useApp } from '../context/useApp';
 
 export default function Login() {
   const navigate = useNavigate();
+  const { loginAdmin, verificandoSessao, perfil, usuario } = useApp();
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [mostrarSenha, setMostrarSenha] = useState(false);
   const [erro, setErro] = useState('');
   const [carregando, setCarregando] = useState(false);
+
+  useEffect(() => {
+    if (usuario && perfil?.papel) {
+      navigate('/admin');
+    }
+  }, [usuario, perfil, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -21,18 +28,22 @@ export default function Login() {
     }
 
     setCarregando(true);
+    const res = await loginAdmin(email, senha);
+    setCarregando(false);
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password: senha });
-
-    if (error) {
-      setErro('Email ou senha inválidos.');
-      setCarregando(false);
+    if (!res.sucesso) {
+      setErro(res.error?.message || 'Erro ao entrar.');
       return;
     }
-
-    setCarregando(false);
-    navigate('/admin');
   };
+
+  if (verificandoSessao) {
+    return (
+      <div className="min-h-screen bg-dark text-light flex items-center justify-center">
+        <Loader2 size={32} className="animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-dark text-light flex flex-col items-center justify-center p-6">
