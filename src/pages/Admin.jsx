@@ -1,7 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, lazy, Suspense } from 'react';
 import { useApp } from '../context/useApp';
 import { CATEGORIAS, ESTABELECIMENTO } from '../data/constants';
-import { QRCodeCanvas } from 'qrcode.react';
 import {
   Plus,
   Save,
@@ -17,6 +16,8 @@ import {
   Utensils,
   Loader2,
 } from 'lucide-react';
+
+const QRCodePanel = lazy(() => import('../components/QRCodePanel.jsx'));
 
 function formatarData(data) {
   try {
@@ -246,8 +247,8 @@ export default function Admin() {
   }
 
   const cardapioUrl = typeof window !== 'undefined'
-    ? `${window.location.origin}/#/${config.slug || ''}/cardapio`
-    : '/#/cardapio';
+    ? `${window.location.origin}/#/${config.slug || ''}`
+    : '/';
 
   async function handleSalvarProduto(produto) {
     try {
@@ -681,17 +682,9 @@ export default function Admin() {
         )}
 
         {aba === 'qrcode' && (
-          <div className="mt-6 bg-white rounded-2xl p-6 border border-border text-center">
-            <QrCode size={32} className="mx-auto text-primary mb-3" />
-            <h2 className="font-bold text-dark mb-1">QR Code do cardápio</h2>
-            <p className="text-xs text-muted mb-4 break-all">{cardapioUrl}</p>
-            <div className="flex justify-center">
-              <QRCodeCanvas value={cardapioUrl} size={220} level="H" />
-            </div>
-            <p className="text-xs text-muted mt-4">
-              Imprima e cole nas mesas para seus clientes acessarem o cardápio.
-            </p>
-          </div>
+          <Suspense fallback={<div className="mt-6 p-6 text-center text-muted bg-white rounded-2xl border border-border">Carregando QR Code...</div>}>
+            <QRCodePanel cardapioUrl={cardapioUrl} />
+          </Suspense>
         )}
 
         {aba === 'lojas' && isSuperAdmin && (
