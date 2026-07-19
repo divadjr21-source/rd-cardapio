@@ -11,6 +11,7 @@ export default function Checkout() {
   const { carrinho, total, observacoes, enviarPedido, config } = useApp();
   const numeroMesa = useMesaParam();
 
+  const somenteMesa = config?.modulo_mesa === true && config?.modulo_delivery === false;
   const modoMesaAtivo = config?.modulo_mesa === true && numeroMesa;
 
   const [cliente, setCliente] = useState({ nome: '', telefone: '', endereco: '' });
@@ -47,6 +48,11 @@ export default function Checkout() {
     e.preventDefault();
     if (!cliente.nome.trim() || !cliente.telefone.trim()) {
       setErro('Preencha seu nome e telefone.');
+      return;
+    }
+
+    if (somenteMesa && !numeroMesa) {
+      setErro('Por favor, escaneie o QR Code da sua mesa para fazer o pedido.');
       return;
     }
 
@@ -113,6 +119,15 @@ export default function Checkout() {
           </div>
         )}
 
+        {somenteMesa && !numeroMesa && (
+          <div className="mb-4 bg-amber-50 border border-amber-200 text-amber-700 rounded-2xl p-4 text-center">
+            <p className="text-sm font-semibold">⚠️ Atenção</p>
+            <p className="text-sm mt-1">
+              Por favor, escaneie o QR Code da sua mesa para fazer o pedido.
+            </p>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="bg-white rounded-2xl p-4 border border-border space-y-4">
             <div>
@@ -169,6 +184,13 @@ export default function Checkout() {
                     Coordenadas: {localizacao.lat.toFixed(6)}, {localizacao.lng.toFixed(6)}
                   </p>
                 )}
+              </div>
+            )}
+
+            {modoMesaAtivo && (
+              <div className="bg-primary/5 border border-primary/10 rounded-xl p-4 text-center">
+                <p className="text-sm text-muted">📍 Atendimento Local</p>
+                <p className="text-xl font-bold text-primary mt-1">Mesa {numeroMesa}</p>
               </div>
             )}
           </div>

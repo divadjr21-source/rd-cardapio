@@ -547,6 +547,9 @@ export function AppProvider({ children }) {
 
   function formatarMensagemWhatsApp(cliente, pedidoId, localizacao, numeroMesa) {
     const numeroPedido = pedidoId?.slice(0, 5).toUpperCase() || '----';
+    const cabecalho = numeroMesa
+      ? `🛎️ *Novo Pedido - Mesa ${numeroMesa}*`
+      : '🛎️ *Novo Pedido recebido!*';
     const linhas = carrinho.map(
       (item) => `▫️ ${item.quantidade}x ${item.nome} — R$ ${(item.preco * item.quantidade).toFixed(2).replace('.', ',')}`
     );
@@ -557,10 +560,9 @@ export function AppProvider({ children }) {
       : `📍 Localização: https://www.google.com/maps?q=${localizacao.lat},${localizacao.lng}`;
 
     const partes = [
-      '🛎️ *Novo Pedido recebido!*',
+      cabecalho,
       '',
       `*Número:* #${numeroPedido}`,
-      numeroMesa ? `*Mesa:* ${numeroMesa}` : '',
       '',
       '*Itens do pedido:*',
       ...linhas,
@@ -600,6 +602,7 @@ export function AppProvider({ children }) {
           cliente_endereco: numeroMesa ? '' : (cliente.endereco || ''),
           localizacao_maps: numeroMesa ? null : mapLink,
           numero_mesa: numeroMesa || null,
+          tipo_pedido: numeroMesa ? 'mesa' : 'delivery',
           total,
           observacao: observacoes || '',
           itens: JSON.stringify(carrinho),
