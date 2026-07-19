@@ -20,16 +20,16 @@ export default function Cardapio() {
   const totalItens = carrinho.reduce((acc, item) => acc + item.quantidade, 0);
   const totalPreco = carrinho.reduce((acc, item) => acc + item.preco * item.quantidade, 0);
 
+  const bgColor = 'var(--bg-color, #0f172a)';
+  const primaryColor = 'var(--primary-color, #ef4444)';
+
   return (
-    <div
-      className="min-h-[100svh] pb-32"
-      style={{ backgroundColor: 'var(--bg-color, #f3f4f6)' }}
-    >
+    <div className="min-h-[100svh] pb-32" style={{ backgroundColor: 'var(--bg-color, #f3f4f6)' }}>
       <header
-        className="sticky top-0 z-20 text-light border-b border-white/5 shadow-lg"
-        style={{ backgroundColor: 'var(--bg-color, #0f172a)' }}
+        className="sticky top-0 z-20 text-light shadow-lg"
+        style={{ backgroundColor: bgColor }}
       >
-        <div className="max-w-md mx-auto px-4 py-4 flex items-center gap-3">
+        <div className="max-w-md mx-auto px-4 pt-4 pb-3 flex items-center gap-3">
           {config.logo ? (
             <img
               src={config.logo}
@@ -38,54 +38,60 @@ export default function Cardapio() {
             />
           ) : (
             <div className="w-11 h-11 rounded-full bg-white/10 flex items-center justify-center">
-              <Store size={22} style={{ color: 'var(--primary-color, #ef4444)' }} />
+              <Store size={22} style={{ color: primaryColor }} />
             </div>
           )}
           <div className="flex-1 min-w-0 ml-1">
             <h1 className="text-base font-bold truncate tracking-tight">{config.nome || '...'}</h1>
-            <p className="text-xs text-gray-400">Cardápio digital</p>
+            <p className="text-xs text-white/60">Cardápio digital</p>
+          </div>
+        </div>
+
+        <div
+          className="max-w-md mx-auto px-4 pb-3"
+          style={{
+            background: `linear-gradient(to bottom, ${bgColor}, rgba(255,255,255,0.92))`,
+          }}
+        >
+          <div
+            className="flex gap-2 overflow-x-auto pb-3 pt-1 scrollbar-hide"
+            style={{ maskImage: 'linear-gradient(to right, black 90%, transparent 100%)' }}
+          >
+            <button
+              onClick={() => setCategoriaAtiva('todas')}
+              className="shrink-0 px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 border shadow-sm"
+              style={{
+                backgroundColor: categoriaAtiva === 'todas' ? bgColor : 'rgba(255,255,255,0.9)',
+                color: categoriaAtiva === 'todas' ? '#fff' : '#111',
+                borderColor: categoriaAtiva === 'todas' ? 'transparent' : 'rgba(0,0,0,0.06)',
+              }}
+            >
+              Todos
+            </button>
+            {CATEGORIAS.map((cat) => (
+              <button
+                key={cat.id}
+                onClick={() => setCategoriaAtiva(cat.id)}
+                className="shrink-0 px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 border shadow-sm"
+                style={{
+                  backgroundColor: categoriaAtiva === cat.id ? bgColor : 'rgba(255,255,255,0.9)',
+                  color: categoriaAtiva === cat.id ? '#fff' : '#111',
+                  borderColor: categoriaAtiva === cat.id ? 'transparent' : 'rgba(0,0,0,0.06)',
+                }}
+              >
+                {cat.nome}
+              </button>
+            ))}
           </div>
         </div>
       </header>
 
-      <section className="sticky top-[72px] z-10 max-w-md mx-auto px-4 pt-4 pb-2"
-        style={{ backgroundColor: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(12px)' }}
-      >
-        <div className="flex gap-2 overflow-x-auto pb-3 scrollbar-hide">
-          <button
-            onClick={() => setCategoriaAtiva('todas')}
-            className="shrink-0 px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 border"
-            style={{
-              backgroundColor: categoriaAtiva === 'todas' ? 'var(--bg-color, #0f172a)' : '#fff',
-              color: categoriaAtiva === 'todas' ? '#fff' : '#111',
-              borderColor: categoriaAtiva === 'todas' ? 'var(--bg-color, #0f172a)' : '#e5e7eb',
-            }}
-          >
-            Todos
-          </button>
-          {CATEGORIAS.map((cat) => (
-            <button
-              key={cat.id}
-              onClick={() => setCategoriaAtiva(cat.id)}
-              className="shrink-0 px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 border"
-              style={{
-                backgroundColor: categoriaAtiva === cat.id ? 'var(--bg-color, #0f172a)' : '#fff',
-                color: categoriaAtiva === cat.id ? '#fff' : '#111',
-                borderColor: categoriaAtiva === cat.id ? 'var(--bg-color, #0f172a)' : '#e5e7eb',
-              }}
-            >
-              {cat.nome}
-            </button>
-          ))}
-        </div>
-      </section>
-
       {carregando && (
-        <main className="max-w-md mx-auto px-4 mt-6 grid grid-cols-1 gap-4">
+        <main className="max-w-md mx-auto px-4 mt-8 grid grid-cols-1 gap-4">
           {[1, 2, 3].map((i) => (
             <div
               key={i}
-              className="bg-surface rounded-2xl border border-border shadow-sm overflow-hidden flex flex-col"
+              className="bg-white rounded-2xl border border-border shadow-sm overflow-hidden flex flex-col"
             >
               <div className="w-full aspect-[4/3] bg-gray-100 skeleton" />
               <div className="p-4 space-y-3">
@@ -103,7 +109,7 @@ export default function Cardapio() {
       )}
 
       {!carregando && (
-        <main className="max-w-md mx-auto px-4 mt-6 grid grid-cols-1 gap-5">
+        <main className="max-w-md mx-auto px-4 mt-8 grid grid-cols-1 gap-5">
           {filtrados.length === 0 ? (
             <div className="text-center py-16 text-muted flex flex-col items-center gap-3">
               <UtensilsCrossed size={40} className="text-border" />
@@ -118,13 +124,16 @@ export default function Cardapio() {
       )}
 
       {totalItens > 0 && (
-        <div className="fixed bottom-0 inset-x-0 z-30 px-4 pb-5 pt-2"
-          style={{ background: 'linear-gradient(to top, var(--bg-color, #f3f4f6), rgba(255,255,255,0))' }}
+        <div
+          className="fixed bottom-0 inset-x-0 z-30 px-4 pb-5 pt-2"
+          style={{
+            background: 'linear-gradient(to top, var(--bg-color, #f3f4f6), rgba(255,255,255,0))',
+          }}
         >
           <button
             onClick={() => navigate(`/${slug}/carrinho`)}
             className="w-full max-w-md mx-auto flex items-center justify-between px-5 py-4 text-white rounded-2xl transition-all duration-300 active:scale-[0.98]"
-            style={{ backgroundColor: 'var(--primary-color, #ef4444)' }}
+            style={{ backgroundColor: primaryColor }}
           >
             <span className="flex items-center gap-2.5 font-bold">
               <ShoppingCart size={20} />
