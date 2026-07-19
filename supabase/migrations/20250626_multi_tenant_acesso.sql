@@ -206,5 +206,11 @@ ALTER TABLE public.restaurantes ADD COLUMN IF NOT EXISTS modulo_mesa boolean DEF
 -- Adiciona numero da mesa no pedido (nulo quando for delivery)
 ALTER TABLE public.pedidos ADD COLUMN IF NOT EXISTS numero_mesa text;
 
+-- Adiciona tipo de pedido (delivery/mesa)
+ALTER TABLE public.pedidos ADD COLUMN IF NOT EXISTS tipo_pedido text DEFAULT 'delivery' CHECK (tipo_pedido IN ('delivery','mesa'));
+
+-- Forca recarregamento do schema cache do PostgREST
+NOTIFY pgrst, 'reload schema';
+
 -- Atualiza todas as lojas existentes para ativo (migracao segura)
 UPDATE public.restaurantes SET status = 'ativo' WHERE status IS NULL;
