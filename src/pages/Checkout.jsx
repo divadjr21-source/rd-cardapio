@@ -40,8 +40,13 @@ export default function Checkout() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!cliente.nome.trim() || !cliente.telefone.trim()) {
-      setErro('Preencha seu nome e telefone.');
+    if (!cliente.nome.trim()) {
+      setErro('Preencha seu nome.');
+      return;
+    }
+
+    if (!modoMesaAtivo && !cliente.telefone.trim()) {
+      setErro('Preencha seu telefone.');
       return;
     }
 
@@ -144,18 +149,20 @@ export default function Checkout() {
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-semibold text-dark mb-1.5">
-                    <Phone size={14} className="inline mr-1" /> Telefone
-                  </label>
-                  <input
-                    type="tel"
-                    value={cliente.telefone}
-                    onChange={(e) => setCliente({ ...cliente, telefone: e.target.value })}
-                    placeholder="(11) 99999-9999"
-                    className="w-full px-4 py-3 bg-bg border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
-                </div>
+                {!modoMesaAtivo && (
+                  <div>
+                    <label className="block text-sm font-semibold text-dark mb-1.5">
+                      <Phone size={14} className="inline mr-1" /> Telefone
+                    </label>
+                    <input
+                      type="tel"
+                      value={cliente.telefone}
+                      onChange={(e) => setCliente({ ...cliente, telefone: e.target.value })}
+                      placeholder="(11) 99999-9999"
+                      className="w-full px-4 py-3 bg-bg border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
+                )}
 
                 {!modoMesaAtivo && (
                   <div>
