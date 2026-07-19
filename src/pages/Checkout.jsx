@@ -3,13 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Send, User, Phone, MapPin, Navigation } from 'lucide-react';
 import { useApp } from '../context/useApp';
 import { useRestauranteSlug } from '../hooks/useRestauranteSlug';
-import { useMesaParam } from '../hooks/useMesaParam';
 
 export default function Checkout() {
   const navigate = useNavigate();
   const slug = useRestauranteSlug();
-  const { carrinho, total, observacoes, enviarPedido, config } = useApp();
-  const numeroMesa = useMesaParam();
+  const { carrinho, total, observacoes, enviarPedido, config, numeroMesa } = useApp();
 
   const somenteMesa = config?.modulo_mesa === true && config?.modulo_delivery === false;
   const modoMesaAtivo = config?.modulo_mesa === true && numeroMesa;

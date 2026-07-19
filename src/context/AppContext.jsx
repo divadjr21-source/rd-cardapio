@@ -28,6 +28,36 @@ export function AppProvider({ children }) {
   const [carrinho, setCarrinho] = useState([]);
   const [observacoes, setObservacoes] = useState('');
 
+  const [numeroMesa, setNumeroMesa] = useState(null);
+  const chaveMesa = restauranteSlug ? `cardapio_mesa_${restauranteSlug}` : null;
+
+  // Captura e persiste o parametro ?mesa= para o restaurante atual
+  useEffect(() => {
+    if (!restauranteSlug) {
+      setNumeroMesa(null);
+      return;
+    }
+
+    const rawSearch = location.search || window.location.search || '';
+    let mesa = (new URLSearchParams(rawSearch).get('mesa') || '').trim();
+
+    if (!mesa && window.location.hash.includes('?')) {
+      const hashParams = new URLSearchParams(window.location.hash.split('?')[1] || '');
+      mesa = (hashParams.get('mesa') || '').trim();
+    }
+
+    const salva = localStorage.getItem(chaveMesa);
+
+    if (/^\d+$/.test(mesa)) {
+      localStorage.setItem(chaveMesa, mesa);
+      setNumeroMesa(mesa);
+    } else if (salva && /^\d+$/.test(salva)) {
+      setNumeroMesa(salva);
+    } else {
+      setNumeroMesa(null);
+    }
+  }, [restauranteSlug, location.search, chaveMesa]);
+
   useEffect(() => {
     if (!chaveCarrinho) {
       setCarrinho([]);
@@ -659,6 +689,7 @@ export function AppProvider({ children }) {
         removerDoCarrinho,
         limparCarrinho,
         enviarPedido,
+        numeroMesa,
         carregando,
         erro,
         usuario,
