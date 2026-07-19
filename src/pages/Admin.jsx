@@ -15,9 +15,11 @@ import {
   Home,
   Utensils,
   Loader2,
+  Palette,
 } from 'lucide-react';
 
 const QRCodePanel = lazy(() => import('../components/QRCodePanel.jsx'));
+const AppearancePanel = lazy(() => import('../components/AppearancePanel.jsx'));
 
 function formatarData(data) {
   try {
@@ -309,6 +311,7 @@ export default function Admin() {
       status: r.status || 'ativo',
       modulo_delivery: r.modulo_delivery !== false,
       modulo_mesa: r.modulo_mesa === true,
+      estilo_config: r.estilo_config || ESTABELECIMENTO.estilo_config,
     });
   }
 
@@ -410,6 +413,7 @@ export default function Admin() {
       { id: 'usuarios', label: 'Usuários', icon: Users },
     ] : [
       { id: 'config', label: 'Loja', icon: Store },
+      { id: 'aparencia', label: 'Aparência', icon: Palette },
     ]),
   ];
 
@@ -684,6 +688,28 @@ export default function Admin() {
         {aba === 'qrcode' && (
           <Suspense fallback={<div className="mt-6 p-6 text-center text-muted bg-white rounded-2xl border border-border">Carregando QR Code...</div>}>
             <QRCodePanel cardapioUrl={cardapioUrl} />
+          </Suspense>
+        )}
+
+        {aba === 'aparencia' && !isSuperAdmin && (
+          <Suspense fallback={<div className="mt-6 p-6 text-center text-muted bg-white rounded-2xl border border-border">Carregando Aparência...</div>}>
+            <AppearancePanel
+              config={configLocal}
+              onChange={setConfigLocal}
+              onSalvar={async () => {
+                const restauranteId = config.id;
+                if (!restauranteId) {
+                  alert('Restaurante não identificado.');
+                  return;
+                }
+                try {
+                  await salvarConfiguracoes({ ...configLocal, id: restauranteId });
+                  alert('Aparência salva com sucesso!');
+                } catch (err) {
+                  alert('Erro ao salvar aparência: ' + (err.message || 'Erro desconhecido'));
+                }
+              }}
+            />
           </Suspense>
         )}
 

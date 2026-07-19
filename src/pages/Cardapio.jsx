@@ -21,8 +21,14 @@ export default function Cardapio() {
   const totalPreco = carrinho.reduce((acc, item) => acc + item.preco * item.quantidade, 0);
 
   return (
-    <div className="min-h-[100svh] bg-bg pb-32">
-      <header className="sticky top-0 z-20 bg-dark/95 backdrop-blur-md text-light border-b border-white/5 shadow-lg">
+    <div
+      className="min-h-[100svh] pb-32"
+      style={{ backgroundColor: 'var(--bg-color, #f3f4f6)' }}
+    >
+      <header
+        className="sticky top-0 z-20 text-light border-b border-white/5 shadow-lg"
+        style={{ backgroundColor: 'var(--bg-color, #0f172a)' }}
+      >
         <div className="max-w-md mx-auto px-4 py-4 flex items-center gap-3">
           {config.logo ? (
             <img
@@ -32,7 +38,7 @@ export default function Cardapio() {
             />
           ) : (
             <div className="w-11 h-11 rounded-full bg-white/10 flex items-center justify-center">
-              <Store size={22} className="text-primary" />
+              <Store size={22} style={{ color: 'var(--primary-color, #ef4444)' }} />
             </div>
           )}
           <div className="flex-1 min-w-0 ml-1">
@@ -42,15 +48,18 @@ export default function Cardapio() {
         </div>
       </header>
 
-      <section className="sticky top-[72px] z-10 bg-bg/95 backdrop-blur-md max-w-md mx-auto px-4 pt-4 pb-2">
+      <section className="sticky top-[72px] z-10 max-w-md mx-auto px-4 pt-4 pb-2"
+        style={{ backgroundColor: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(12px)' }}
+      >
         <div className="flex gap-2 overflow-x-auto pb-3 scrollbar-hide">
           <button
             onClick={() => setCategoriaAtiva('todas')}
-            className={`shrink-0 px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 border ${
-              categoriaAtiva === 'todas'
-                ? 'bg-dark text-light border-dark shadow-md'
-                : 'bg-surface text-dark border-border hover:border-muted'
-            }`}
+            className="shrink-0 px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 border"
+            style={{
+              backgroundColor: categoriaAtiva === 'todas' ? 'var(--bg-color, #0f172a)' : '#fff',
+              color: categoriaAtiva === 'todas' ? '#fff' : '#111',
+              borderColor: categoriaAtiva === 'todas' ? 'var(--bg-color, #0f172a)' : '#e5e7eb',
+            }}
           >
             Todos
           </button>
@@ -58,11 +67,12 @@ export default function Cardapio() {
             <button
               key={cat.id}
               onClick={() => setCategoriaAtiva(cat.id)}
-              className={`shrink-0 px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 border ${
-                categoriaAtiva === cat.id
-                  ? 'bg-dark text-light border-dark shadow-md'
-                  : 'bg-surface text-dark border-border hover:border-muted'
-              }`}
+              className="shrink-0 px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 border"
+              style={{
+                backgroundColor: categoriaAtiva === cat.id ? 'var(--bg-color, #0f172a)' : '#fff',
+                color: categoriaAtiva === cat.id ? '#fff' : '#111',
+                borderColor: categoriaAtiva === cat.id ? 'var(--bg-color, #0f172a)' : '#e5e7eb',
+              }}
             >
               {cat.nome}
             </button>
@@ -108,10 +118,13 @@ export default function Cardapio() {
       )}
 
       {totalItens > 0 && (
-        <div className="fixed bottom-0 inset-x-0 z-30 px-4 pb-5 pt-2 bg-gradient-to-t from-bg via-bg to-transparent">
+        <div className="fixed bottom-0 inset-x-0 z-30 px-4 pb-5 pt-2"
+          style={{ background: 'linear-gradient(to top, var(--bg-color, #f3f4f6), rgba(255,255,255,0))' }}
+        >
           <button
             onClick={() => navigate(`/${slug}/carrinho`)}
-            className="w-full max-w-md mx-auto flex items-center justify-between px-5 py-4 bg-primary hover:bg-primary-dark text-white rounded-2xl shadow-[0_12px_40px_-10px_rgba(225,29,72,0.45)] transition-all duration-300 active:scale-[0.98]"
+            className="w-full max-w-md mx-auto flex items-center justify-between px-5 py-4 text-white rounded-2xl transition-all duration-300 active:scale-[0.98]"
+            style={{ backgroundColor: 'var(--primary-color, #ef4444)' }}
           >
             <span className="flex items-center gap-2.5 font-bold">
               <ShoppingCart size={20} />

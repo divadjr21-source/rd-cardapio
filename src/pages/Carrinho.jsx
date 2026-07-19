@@ -20,16 +20,21 @@ export default function Carrinho() {
 
   if (!restaurantePronto) {
     return (
-      <div className="min-h-[100svh] bg-bg flex flex-col items-center justify-center px-6 text-center">
-        <Loader2 className="animate-spin text-primary mb-4" size={32} />
+      <div className="min-h-[100svh] flex flex-col items-center justify-center px-6 text-center"
+        style={{ backgroundColor: 'var(--bg-color, #f3f4f6)' }}>
+        <Loader2 className="animate-spin mb-4" style={{ color: 'var(--primary-color, #ef4444)' }} size={32} />
         <p className="text-muted text-sm">Carregando dados da loja...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-[100svh] bg-bg pb-40">
-      <header className="bg-dark text-light">
+    <div className="min-h-[100svh] pb-40"
+      style={{ backgroundColor: 'var(--bg-color, #f3f4f6)' }}>
+      <header
+        className="text-light"
+        style={{ backgroundColor: 'var(--bg-color, #0f172a)' }}
+      >
         <div className="max-w-md mx-auto px-4 py-4 flex items-center gap-3">
           <button onClick={() => navigate(`/${slug}/cardapio`)} className="p-2 -ml-2 hover:bg-white/10 rounded-full">
             <ArrowLeft size={22} />
@@ -47,7 +52,8 @@ export default function Carrinho() {
             <p className="text-muted">Seu carrinho está vazio.</p>
             <button
               onClick={() => navigate(`/${slug}/cardapio`)}
-              className="mt-6 px-6 py-3 bg-primary text-white rounded-full font-semibold"
+              className="mt-6 px-6 py-3 text-white rounded-full font-semibold"
+              style={{ backgroundColor: 'var(--primary-color, #ef4444)' }}
             >
               Ver cardápio
             </button>
@@ -71,7 +77,7 @@ export default function Carrinho() {
                       <p className="text-sm text-muted">{item.descricao}</p>
                     </div>
                     <div className="flex items-center justify-between mt-2">
-                      <span className="font-bold text-primary">
+                      <span className="font-bold" style={{ color: 'var(--primary-color, #ef4444)' }}>
                         R$ {(item.preco * item.quantidade).toFixed(2).replace('.', ',')}
                       </span>
                       <div className="flex items-center gap-2">
@@ -111,13 +117,14 @@ export default function Carrinho() {
                 value={observacoes}
                 onChange={(e) => setObservacoes(e.target.value)}
                 placeholder="Ex: sem cebola, maionese à parte..."
-                className="w-full min-h-[80px] px-3 py-2 text-sm bg-bg border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+                className="w-full min-h-[80px] px-3 py-2 text-sm bg-bg border border-border rounded-xl focus:outline-none focus:ring-2 resize-none"
+                style={{ '--tw-ring-color': 'var(--primary-color, #ef4444)' }}
               />
             </div>
 
             <div className="mt-5 bg-white rounded-2xl p-4 border border-border flex items-center justify-between">
               <span className="text-muted">Total do pedido</span>
-              <span className="text-2xl font-bold text-primary">
+              <span className="text-2xl font-bold" style={{ color: 'var(--primary-color, #ef4444)' }}>
                 R$ {total.toFixed(2).replace('.', ',')}
               </span>
             </div>
@@ -130,7 +137,8 @@ export default function Carrinho() {
           <div className="max-w-md mx-auto">
             <button
               onClick={() => navigate(`/${slug}/checkout`)}
-              className="w-full py-4 bg-primary hover:bg-primary-dark text-white font-bold rounded-2xl shadow-lg flex items-center justify-center gap-2 transition-transform active:scale-95"
+              className="w-full py-4 text-white font-bold rounded-2xl shadow-lg flex items-center justify-center gap-2 transition-transform active:scale-95"
+              style={{ backgroundColor: 'var(--primary-color, #ef4444)' }}
             >
               <Send size={20} />
               Finalizar pedido

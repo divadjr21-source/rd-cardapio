@@ -80,6 +80,26 @@ export function AppProvider({ children }) {
     }
   }, [carrinho, chaveCarrinho]);
 
+  function normalizarEstiloConfig(raw) {
+    return {
+      cor_primaria: raw?.cor_primaria || ESTABELECIMENTO.estilo_config.cor_primaria,
+      cor_fundo: raw?.cor_fundo || ESTABELECIMENTO.estilo_config.cor_fundo,
+      estilo_bordas: raw?.estilo_bordas || ESTABELECIMENTO.estilo_config.estilo_bordas,
+    };
+  }
+
+  function aplicarVariaveisCSS(estilo) {
+    const root = document.documentElement;
+    root.style.setProperty('--primary-color', estilo.cor_primaria);
+    root.style.setProperty('--bg-color', estilo.cor_fundo);
+    root.style.setProperty('--border-radius', estilo.estilo_bordas === 'quadrado' ? '0.5rem' : '1rem');
+  }
+
+  // Aplica as variaveis CSS sempre que o estilo_config mudar
+  useEffect(() => {
+    aplicarVariaveisCSS(config.estilo_config || ESTABELECIMENTO.estilo_config);
+  }, [config.estilo_config]);
+
   useEffect(() => {
     let ignorar = false;
 
@@ -123,6 +143,7 @@ export function AppProvider({ children }) {
               status: rData.status || 'ativo',
               modulo_delivery: rData.modulo_delivery !== false,
               modulo_mesa: rData.modulo_mesa === true,
+              estilo_config: normalizarEstiloConfig(rData.estilo_config),
             });
             await recarregarProdutos(rData.id);
           }
@@ -198,6 +219,7 @@ export function AppProvider({ children }) {
         status: restaurante.status || 'ativo',
         modulo_delivery: restaurante.modulo_delivery !== false,
         modulo_mesa: restaurante.modulo_mesa === true,
+        estilo_config: normalizarEstiloConfig(restaurante.estilo_config),
       });
 
       await recarregarProdutos(restaurante.id);
@@ -373,6 +395,7 @@ export function AppProvider({ children }) {
         logo: novaConfig.logo || '',
         modulo_delivery: novaConfig.modulo_delivery,
         modulo_mesa: novaConfig.modulo_mesa,
+        estilo_config: novaConfig.estilo_config || ESTABELECIMENTO.estilo_config,
       })
       .eq('id', restauranteId);
 
@@ -533,6 +556,7 @@ export function AppProvider({ children }) {
       status: restaurante.status || 'ativo',
       modulo_delivery: restaurante.modulo_delivery !== false,
       modulo_mesa: restaurante.modulo_mesa === true,
+      estilo_config: normalizarEstiloConfig(restaurante.estilo_config),
     });
     await recarregarProdutos(restaurante.id);
   }

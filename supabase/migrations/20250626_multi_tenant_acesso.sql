@@ -212,5 +212,8 @@ ALTER TABLE public.pedidos ADD COLUMN IF NOT EXISTS tipo_pedido text DEFAULT 'de
 -- Forca recarregamento do schema cache do PostgREST
 NOTIFY pgrst, 'reload schema';
 
+-- Adiciona configuracao de estilo visual da loja
+ALTER TABLE public.restaurantes ADD COLUMN IF NOT EXISTS estilo_config jsonb DEFAULT '{"cor_primaria":"#ef4444","cor_fundo":"#0f172a","estilo_bordas":"arredondado"}'::jsonb;
+
 -- Atualiza todas as lojas existentes para ativo (migracao segura)
 UPDATE public.restaurantes SET status = 'ativo' WHERE status IS NULL;

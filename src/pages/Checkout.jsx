@@ -26,11 +26,13 @@ export default function Checkout() {
 
   if (carrinho.length === 0) {
     return (
-      <div className="min-h-[100svh] bg-bg flex flex-col items-center justify-center p-6 text-center">
+      <div className="min-h-[100svh] flex flex-col items-center justify-center p-6 text-center"
+        style={{ backgroundColor: 'var(--bg-color, #f3f4f6)' }}>
         <p className="text-muted">Seu carrinho está vazio.</p>
         <button
           onClick={() => navigate(`/${slug}/cardapio`)}
-          className="mt-4 px-6 py-3 bg-primary text-white rounded-full font-semibold"
+          className="mt-4 px-6 py-3 text-white rounded-full font-semibold"
+          style={{ backgroundColor: 'var(--primary-color, #ef4444)' }}
         >
           Voltar ao cardápio
         </button>
@@ -99,8 +101,8 @@ export default function Checkout() {
   };
 
   return (
-    <div className="min-h-[100svh] bg-bg pb-32">
-      <header className="bg-dark text-light">
+    <div className="min-h-[100svh] pb-32" style={{ backgroundColor: 'var(--bg-color, #f3f4f6)' }}>
+      <header className="text-light" style={{ backgroundColor: 'var(--bg-color, #0f172a)' }}>
         <div className="max-w-md mx-auto px-4 py-4 flex items-center gap-3">
           <button onClick={() => navigate(`/${slug}/carrinho`)} className="p-2 -ml-2 hover:bg-white/10 rounded-full">
             <ArrowLeft size={22} />
@@ -128,7 +130,9 @@ export default function Checkout() {
         {(somenteMesa ? numeroMesa : true) && (
           <>
             {modoMesaAtivo && (
-              <div className="mb-4 bg-primary/10 border border-primary/20 text-primary rounded-2xl p-4 text-center">
+              <div className="mb-4 rounded-2xl p-4 text-center"
+                style={{ backgroundColor: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', color: 'var(--primary-color, #ef4444)' }}
+              >
                 <p className="text-sm font-semibold">📌 Atendimento Local</p>
                 <p className="text-2xl font-bold">Mesa {numeroMesa}</p>
               </div>
@@ -145,7 +149,8 @@ export default function Checkout() {
                     value={cliente.nome}
                     onChange={(e) => setCliente({ ...cliente, nome: e.target.value })}
                     placeholder="Seu nome completo"
-                    className="w-full px-4 py-3 bg-bg border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full px-4 py-3 bg-bg border border-border rounded-xl focus:outline-none focus:ring-2"
+                    style={{ '--tw-ring-color': 'var(--primary-color, #ef4444)' }}
                   />
                 </div>
 
@@ -159,7 +164,8 @@ export default function Checkout() {
                       value={cliente.telefone}
                       onChange={(e) => setCliente({ ...cliente, telefone: e.target.value })}
                       placeholder="(11) 99999-9999"
-                      className="w-full px-4 py-3 bg-bg border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="w-full px-4 py-3 bg-bg border border-border rounded-xl focus:outline-none focus:ring-2"
+                      style={{ '--tw-ring-color': 'var(--primary-color, #ef4444)' }}
                     />
                   </div>
                 )}
@@ -174,14 +180,16 @@ export default function Checkout() {
                       value={cliente.endereco}
                       onChange={(e) => setCliente({ ...cliente, endereco: e.target.value })}
                       placeholder="Rua, número, bairro"
-                      className="w-full px-4 py-3 bg-bg border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="w-full px-4 py-3 bg-bg border border-border rounded-xl focus:outline-none focus:ring-2"
+                      style={{ '--tw-ring-color': 'var(--primary-color, #ef4444)' }}
                     />
 
                     <button
                       type="button"
                       onClick={capturarLocalizacao}
                       disabled={buscandoLocal}
-                      className="mt-2 flex items-center gap-2 text-sm font-semibold text-primary hover:text-primary-dark disabled:text-gray-400"
+                      className="mt-2 flex items-center gap-2 text-sm font-semibold disabled:text-gray-400"
+                      style={{ color: 'var(--primary-color, #ef4444)' }}
                     >
                       <Navigation size={16} />
                       {buscandoLocal ? 'Obtendo localização...' : localizacao ? 'Localização capturada' : 'Usar minha localização atual'}
@@ -217,7 +225,7 @@ export default function Checkout() {
                 )}
                 <div className="mt-4 pt-3 border-t border-border flex justify-between items-center">
                   <span className="text-muted">Total</span>
-                  <span className="text-xl font-bold text-primary">
+                  <span className="text-xl font-bold" style={{ color: 'var(--primary-color, #ef4444)' }}>
                     R$ {total.toFixed(2).replace('.', ',')}
                   </span>
                 </div>
@@ -229,7 +237,8 @@ export default function Checkout() {
 
               <button
                 type="submit"
-                className="w-full py-4 bg-primary hover:bg-primary-dark text-white font-bold rounded-2xl shadow-lg flex items-center justify-center gap-2 transition-transform active:scale-95"
+                className="w-full py-4 text-white font-bold rounded-2xl shadow-lg flex items-center justify-center gap-2 transition-transform active:scale-95"
+                style={{ backgroundColor: 'var(--primary-color, #ef4444)' }}
               >
                 <Send size={20} />
                 {modoMesaAtivo ? 'Enviar pedido para a cozinha' : 'Enviar pedido pelo WhatsApp'}

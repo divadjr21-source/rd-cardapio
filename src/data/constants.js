@@ -3,11 +3,16 @@ export const ESTABELECIMENTO = {
   telefone: '',
   logo: '',
   endereco: '',
-  corPrimaria: '#dc2626',
-  corEscura: '#111111',
+  corPrimaria: '#ef4444',
+  corEscura: '#0f172a',
   status: 'ativo',
   modulo_delivery: true,
   modulo_mesa: false,
+  estilo_config: {
+    cor_primaria: '#ef4444',
+    cor_fundo: '#0f172a',
+    estilo_bordas: 'arredondado',
+  },
 };
 
 export const CATEGORIAS = [
