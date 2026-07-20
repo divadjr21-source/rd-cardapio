@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ShoppingCart, Store, UtensilsCrossed, Star, Clock, Search } from 'lucide-react';
+import { ShoppingCart, Store, UtensilsCrossed, Star, Search } from 'lucide-react';
 import { useApp } from '../context/useApp';
 import ProdutoCard from '../components/ProdutoCard';
 import { CATEGORIAS } from '../data/constants';
@@ -54,16 +54,17 @@ export default function Cardapio() {
           )}
           <div className="flex-1 min-w-0">
             <h1 className="text-xl font-bold truncate tracking-tight">{config.nome || '...'}</h1>
-            <div className="flex items-center gap-3 mt-1.5 text-xs text-white/70">
+            <div className="flex items-center gap-3 mt-1 text-xs text-white/70">
               <span className="flex items-center gap-1">
                 <Star size={12} className="text-yellow-400" fill="currentColor" />
                 4.9 (120+)
               </span>
               <span className="flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                Aberto até 23:00
+                Aberto
               </span>
             </div>
+            <p className="text-xs text-white/50 mt-1">Cardápio digital</p>
           </div>
         </div>
 
