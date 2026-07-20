@@ -31,6 +31,8 @@ export function AppProvider({ children }) {
   const [numeroMesa, setNumeroMesa] = useState(null);
   const chaveMesa = restauranteSlug ? `cardapio_mesa_${restauranteSlug}` : null;
 
+  const [slugAnterior, setSlugAnterior] = useState(null);
+
   // Captura e persiste o parametro ?mesa= para o restaurante atual
   useEffect(() => {
     if (!restauranteSlug) {
@@ -57,6 +59,14 @@ export function AppProvider({ children }) {
       setNumeroMesa(null);
     }
   }, [restauranteSlug, location.search, chaveMesa]);
+
+  // Limpa o carrinho quando o restaurante muda
+  useEffect(() => {
+    if (restauranteSlug && slugAnterior && restauranteSlug !== slugAnterior) {
+      setCarrinho([]);
+      setObservacoes('');
+    }
+  }, [restauranteSlug, slugAnterior]);
 
   useEffect(() => {
     if (!chaveCarrinho) {
@@ -97,8 +107,9 @@ export function AppProvider({ children }) {
 
   // Aplica as variaveis CSS sempre que o estilo_config mudar
   useEffect(() => {
+    if (!restauranteSlug) return;
     aplicarVariaveisCSS(config.estilo_config || ESTABELECIMENTO.estilo_config);
-  }, [config.estilo_config]);
+  }, [config.estilo_config, restauranteSlug]);
 
   useEffect(() => {
     let ignorar = false;
@@ -192,6 +203,8 @@ export function AppProvider({ children }) {
       setErro(null);
       setConfig(ESTABELECIMENTO);
       setProdutos([]);
+      setObservacoes('');
+      setSlugAnterior(restauranteSlug);
 
       const { data: restaurante, error: erroRestaurante } = await supabase
         .from('restaurantes')
