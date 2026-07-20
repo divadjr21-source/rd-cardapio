@@ -23,6 +23,10 @@ export default function Cardapio() {
   const bgColor = 'var(--bg-color, #0f172a)';
   const primaryColor = 'var(--primary-color, #ef4444)';
 
+  const categoriasComProdutos = CATEGORIAS.filter((cat) =>
+    produtosAtivos.some((p) => p.categoria === cat.id)
+  );
+
   return (
     <div className="min-h-[100svh] pb-32" style={{ backgroundColor: 'var(--bg-color, #f3f4f6)' }}>
       <header
@@ -57,18 +61,20 @@ export default function Cardapio() {
             className="flex gap-2 overflow-x-auto pb-3 pt-1 scrollbar-hide"
             style={{ maskImage: 'linear-gradient(to right, black 90%, transparent 100%)' }}
           >
-            <button
-              onClick={() => setCategoriaAtiva('todas')}
-              className="shrink-0 px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 border shadow-sm"
-              style={{
-                backgroundColor: categoriaAtiva === 'todas' ? bgColor : 'rgba(255,255,255,0.9)',
-                color: categoriaAtiva === 'todas' ? '#fff' : '#111',
-                borderColor: categoriaAtiva === 'todas' ? 'transparent' : 'rgba(0,0,0,0.06)',
-              }}
-            >
-              Todos
-            </button>
-            {CATEGORIAS.map((cat) => (
+            {produtosAtivos.length > 0 && (
+              <button
+                onClick={() => setCategoriaAtiva('todas')}
+                className="shrink-0 px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 border shadow-sm"
+                style={{
+                  backgroundColor: categoriaAtiva === 'todas' ? bgColor : 'rgba(255,255,255,0.9)',
+                  color: categoriaAtiva === 'todas' ? '#fff' : '#111',
+                  borderColor: categoriaAtiva === 'todas' ? 'transparent' : 'rgba(0,0,0,0.06)',
+                }}
+              >
+                Todos
+              </button>
+            )}
+            {categoriasComProdutos.map((cat) => (
               <button
                 key={cat.id}
                 onClick={() => setCategoriaAtiva(cat.id)}
