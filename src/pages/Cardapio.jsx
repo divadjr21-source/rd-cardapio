@@ -33,21 +33,21 @@ export default function Cardapio() {
         className="sticky top-0 z-20 text-light shadow-lg"
         style={{ backgroundColor: bgColor }}
       >
-        <div className="max-w-md mx-auto px-4 pt-4 pb-3 flex items-center gap-3">
+        <div className="max-w-md mx-auto px-4 pt-6 pb-4 flex items-center gap-4">
           {config.logo ? (
             <img
               src={config.logo}
               alt=""
-              className="w-11 h-11 rounded-full object-cover border-2 border-white/10 shadow-sm"
+              className="w-16 h-16 rounded-2xl object-cover border-2 border-white/15 shadow-md"
             />
           ) : (
-            <div className="w-11 h-11 rounded-full bg-white/10 flex items-center justify-center">
-              <Store size={22} style={{ color: primaryColor }} />
+            <div className="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center shadow-md">
+              <Store size={28} style={{ color: primaryColor }} />
             </div>
           )}
-          <div className="flex-1 min-w-0 ml-1">
-            <h1 className="text-base font-bold truncate tracking-tight">{config.nome || '...'}</h1>
-            <p className="text-xs text-white/60">Cardápio digital</p>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-xl font-bold truncate tracking-tight">{config.nome || '...'}</h1>
+            <p className="text-sm text-white/60 mt-0.5">Cardápio digital</p>
           </div>
         </div>
 
