@@ -93,20 +93,19 @@ export default function Cardapio() {
       </header>
 
       {carregando && (
-        <main className="max-w-md mx-auto px-4 mt-8 grid grid-cols-1 gap-4">
-          {[1, 2, 3].map((i) => (
+        <main className="bg-gray-50 p-3 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+          {[1, 2, 3, 4].map((i) => (
             <div
               key={i}
-              className="bg-white rounded-2xl border border-border shadow-sm overflow-hidden flex flex-col"
+              className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden flex flex-col"
             >
-              <div className="w-full aspect-[4/3] bg-gray-100 skeleton" />
-              <div className="p-4 space-y-3">
-                <div className="h-5 w-2/3 bg-gray-200 rounded skeleton" />
-                <div className="h-4 w-full bg-gray-200 rounded skeleton" />
+              <div className="w-full h-28 bg-gray-100 skeleton" />
+              <div className="p-2 space-y-2">
                 <div className="h-4 w-3/4 bg-gray-200 rounded skeleton" />
+                <div className="h-3 w-full bg-gray-200 rounded skeleton" />
                 <div className="flex items-center justify-between pt-1">
-                  <div className="h-6 w-20 bg-gray-200 rounded skeleton" />
-                  <div className="h-10 w-28 bg-gray-200 rounded-full skeleton" />
+                  <div className="h-4 w-14 bg-gray-200 rounded skeleton" />
+                  <div className="h-7 w-7 bg-gray-200 rounded-full skeleton" />
                 </div>
               </div>
             </div>
@@ -115,9 +114,9 @@ export default function Cardapio() {
       )}
 
       {!carregando && (
-        <main className="max-w-md mx-auto px-4 mt-8 grid grid-cols-1 gap-5">
+        <main className="bg-gray-50 p-3 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
           {filtrados.length === 0 ? (
-            <div className="text-center py-16 text-muted flex flex-col items-center gap-3">
+            <div className="col-span-full text-center py-16 text-muted flex flex-col items-center gap-3">
               <UtensilsCrossed size={40} className="text-border" />
               <p className="text-sm">Nenhum produto disponível nesta categoria.</p>
             </div>

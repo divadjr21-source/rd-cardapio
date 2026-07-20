@@ -21,8 +21,8 @@ export function AppProvider({ children }) {
 
   const restauranteIdAtual = config.id;
 
-  const chaveCarrinho = restauranteIdAtual
-    ? `cardapio_carrinho_${restauranteIdAtual}`
+  const chaveCarrinho = restauranteSlug
+    ? `cardapio_carrinho_${restauranteSlug}`
     : null;
 
   const [carrinho, setCarrinho] = useState([]);
@@ -60,11 +60,15 @@ export function AppProvider({ children }) {
     }
   }, [restauranteSlug, location.search, chaveMesa]);
 
-  // Limpa o carrinho quando o restaurante muda
+  // Limpa estado quando o slug muda para evitar vazamento entre lojas
   useEffect(() => {
     if (restauranteSlug && slugAnterior && restauranteSlug !== slugAnterior) {
+      setConfig(ESTABELECIMENTO);
+      setProdutos([]);
       setCarrinho([]);
       setObservacoes('');
+      setNumeroMesa(null);
+      aplicarVariaveisCSS(ESTABELECIMENTO.estilo_config);
     }
   }, [restauranteSlug, slugAnterior]);
 
@@ -156,7 +160,7 @@ export function AppProvider({ children }) {
               modulo_mesa: rData.modulo_mesa === true,
               estilo_config: normalizarEstiloConfig(rData.estilo_config),
             });
-            await recarregarProdutos(rData.id);
+            await recarregarProdutosAdmin(rData.id);
           }
         }
       }
@@ -201,9 +205,6 @@ export function AppProvider({ children }) {
 
       setCarregando(true);
       setErro(null);
-      setConfig(ESTABELECIMENTO);
-      setProdutos([]);
-      setObservacoes('');
       setSlugAnterior(restauranteSlug);
 
       const { data: restaurante, error: erroRestaurante } = await supabase
@@ -249,7 +250,7 @@ export function AppProvider({ children }) {
       if (!error) setRestaurantes(data || []);
     }
 
-    async function recarregarProdutos(restauranteId) {
+    async function recarregarProdutosPublico(restauranteId) {
       const { data: produtosDb, error: erroProdutos } = await supabase
         .from('produtos')
         .select('nome, preco, categoria, disponivel, descricao, imagem, id, restaurante_id')

@@ -1,10 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-
-const chaveMesa = 'cardapio_mesa';
+import { useRestauranteSlug } from './useRestauranteSlug';
 
 function extrairParametroMesa(rawSearch) {
-  // HashRouter guarda search em location.search
   let params = new URLSearchParams(rawSearch || '');
   let mesa = (params.get('mesa') || '').trim();
 
@@ -18,9 +16,16 @@ function extrairParametroMesa(rawSearch) {
 
 export function useMesaParam() {
   const { search } = useLocation();
+  const slug = useRestauranteSlug();
   const [numeroMesa, setNumeroMesa] = useState(null);
+  const chaveMesa = slug ? `cardapio_mesa_${slug}` : null;
 
   useEffect(() => {
+    if (!chaveMesa) {
+      setNumeroMesa(null);
+      return;
+    }
+
     const mesa = extrairParametroMesa(search);
 
     if (mesa) {
@@ -34,11 +39,12 @@ export function useMesaParam() {
         setNumeroMesa(null);
       }
     }
-  }, [search]);
+  }, [search, chaveMesa]);
 
   return numeroMesa;
 }
 
-export function limparMesaSalva() {
-  localStorage.removeItem(chaveMesa);
+export function limparMesaSalva(slug) {
+  if (!slug) return;
+  localStorage.removeItem(`cardapio_mesa_${slug}`);
 }

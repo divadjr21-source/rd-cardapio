@@ -182,6 +182,15 @@ export default function Admin() {
   const [lojaSelecionadaId, setLojaSelecionadaId] = useState(null);
 
   useEffect(() => {
+    if (!isSuperAdmin) {
+      setLojaSelecionadaId(null);
+      if (aba === 'lojas' || aba === 'usuarios' || aba === 'config') {
+        setAba('produtos');
+      }
+    }
+  }, [isSuperAdmin, aba]);
+
+  useEffect(() => {
     if (isSuperAdmin && (aba === 'lojas' || aba === 'usuarios')) {
       listarRestaurantes().then(setRestaurantesLista);
       if (aba === 'usuarios') {
