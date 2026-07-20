@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ShoppingCart, Store, UtensilsCrossed } from 'lucide-react';
+import { ShoppingCart, Store, UtensilsCrossed, Star, Clock, Search } from 'lucide-react';
 import { useApp } from '../context/useApp';
 import ProdutoCard from '../components/ProdutoCard';
 import { CATEGORIAS } from '../data/constants';
@@ -11,11 +11,18 @@ export default function Cardapio() {
   const slug = useRestauranteSlug();
   const { config, produtosAtivos, carrinho, adicionarAoCarrinho, carregando } = useApp();
   const [categoriaAtiva, setCategoriaAtiva] = useState('todas');
+  const [busca, setBusca] = useState('');
 
-  const filtrados =
-    categoriaAtiva === 'todas'
-      ? produtosAtivos
-      : produtosAtivos.filter((p) => p.categoria === categoriaAtiva);
+  const termoBusca = busca.trim().toLowerCase();
+
+  const filtrados = produtosAtivos.filter((p) => {
+    const pertenceCategoria = categoriaAtiva === 'todas' || p.categoria === categoriaAtiva;
+    const combinaBusca =
+      !termoBusca ||
+      p.nome.toLowerCase().includes(termoBusca) ||
+      (p.descricao || '').toLowerCase().includes(termoBusca);
+    return pertenceCategoria && combinaBusca;
+  });
 
   const totalItens = carrinho.reduce((acc, item) => acc + item.quantidade, 0);
   const totalPreco = carrinho.reduce((acc, item) => acc + item.preco * item.quantidade, 0);
@@ -47,7 +54,16 @@ export default function Cardapio() {
           )}
           <div className="flex-1 min-w-0">
             <h1 className="text-xl font-bold truncate tracking-tight">{config.nome || '...'}</h1>
-            <p className="text-sm text-white/60 mt-0.5">Cardápio digital</p>
+            <div className="flex items-center gap-3 mt-1.5 text-xs text-white/70">
+              <span className="flex items-center gap-1">
+                <Star size={12} className="text-yellow-400" fill="currentColor" />
+                4.9 (120+)
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                Aberto até 23:00
+              </span>
+            </div>
           </div>
         </div>
 
@@ -57,6 +73,24 @@ export default function Cardapio() {
             background: `linear-gradient(to bottom, ${bgColor}, rgba(255,255,255,0.92))`,
           }}
         >
+          <div className="relative mb-3">
+            <Search
+              size={18}
+              className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"
+            />
+            <input
+              type="text"
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
+              placeholder="Pesquisar produtos..."
+              className="w-full pl-10 pr-4 py-2.5 rounded-full text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-2"
+              style={{
+                backgroundColor: 'rgba(28,30,34,0.85)',
+                '--tw-ring-color': 'var(--primary-color, #ef4444)',
+              }}
+            />
+          </div>
+
           <div
             className="flex gap-2 overflow-x-auto pb-3 pt-1 scrollbar-hide"
             style={{ maskImage: 'linear-gradient(to right, black 90%, transparent 100%)' }}
@@ -118,7 +152,11 @@ export default function Cardapio() {
           {filtrados.length === 0 ? (
             <div className="col-span-full text-center py-16 text-muted flex flex-col items-center gap-3">
               <UtensilsCrossed size={40} className="text-border" />
-              <p className="text-sm">Nenhum produto disponível nesta categoria.</p>
+              <p className="text-sm">
+                {termoBusca
+                  ? 'Nenhum produto encontrado para sua busca.'
+                  : 'Nenhum produto disponível nesta categoria.'}
+              </p>
             </div>
           ) : (
             filtrados.map((produto) => (
